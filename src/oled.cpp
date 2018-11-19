@@ -1,3 +1,6 @@
+//shared global
+#include "public.h"
+
 //threading
 #include <TeensyThreads.h>
 #define LOOP_TIME 100 //100 ms
@@ -28,7 +31,6 @@ static Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, OLED_MOSI, OLED_CLK
 
 //
 static int count = 0;
-extern int __count;
 static void draw(void) {
   count += 1;
 
@@ -40,8 +42,8 @@ static void draw(void) {
   display.print("count: ");
   display.println(count);
   //
-  display.print("__count: ");
-  display.println(__count);
+  display.print("__main_count: ");
+  display.println(__main_count);
   // //
   // display.print("\nTime: ");
   // display.print(GPS.hour,DEC); display.print(':');
@@ -96,15 +98,15 @@ static void threadedFunc(void) {
 
 ////
 //  public
-//    (non-static global + extern)
+//    (non-static global -> extern (public.h))
 ////
 
-int oled_start() {
+int __oled_start() {
   is_running = true;
   thread_id = threads.addThread(threadedFunc);
   return (thread_id != -1);   //1 : success, 0 : error
 }
-void oled_stop() {
+void __oled_stop() {
   if (thread_id != -1) {
     is_running = false;
     threads.wait(thread_id, 0);   // wait forever. (blocking wait.)

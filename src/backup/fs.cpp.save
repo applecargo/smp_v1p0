@@ -1,0 +1,122 @@
+//shared global
+#include "public.h"
+
+//threading
+#include <TeensyThreads.h>
+#define LOOP_TIME 100 //100 ms
+
+//sdfat
+#include "SdFat.h"
+
+//TEST
+// 32 KiB buffer.
+const size_t BUF_DIM = 32768;
+// 8 MiB file.
+const uint32_t FILE_SIZE = 256UL*BUF_DIM;
+uint8_t buf[BUF_DIM];
+uint32_t* buf32 = (uint32_t*)buf;
+uint32_t totalMicros = 0;
+uint32_t yieldMicros = 0;
+uint32_t yieldCalls = 0;
+uint32_t yieldMaxUsec = 0;
+
+//
+SdFatSdioEX sdEx;
+File file;
+
+////
+//  private
+//    (file-scoped static global)
+////
+
+//threading
+static int thread_id = -1;
+static bool is_running = false;
+static void threadedFunc(void) {
+
+  // //thread loop
+  // while (is_running) {
+  if (!sdEx.begin()) {
+    sdEx.initErrorHalt("SdFatSdioEX begin() failed");
+  }
+  // make sdEx the current volume.
+  sdEx.chvol();
+
+  // Zero Stats
+  totalMicros = 0;
+  yieldMicros = 0;
+  yieldCalls = 0;
+  yieldMaxUsec = 0;
+  if (!file.open("TeensyDemo.bin", O_RDWR | O_CREAT)) {
+    sdEx.errorHalt("open failed");
+  }
+  Serial.println("\nsize,write,read");
+  Serial.println("bytes,KB/sec,KB/sec");
+  for (size_t nb = 512; nb <= BUF_DIM; nb *= 2) {
+    file.truncate(0);
+    uint32_t nRdWr = FILE_SIZE/nb;
+    Serial.print(nb);
+    Serial.print(',');
+    uint32_t t = micros();
+    for (uint32_t n = 0; n < nRdWr; n++) {
+      // Set start and end of buffer.
+      buf32[0] = n;
+      buf32[nb/4 - 1] = n;
+      if (nb != file.write(buf, nb)) {
+        sdEx.errorHalt("write failed");
+      }
+    }
+    t = micros() - t;
+    totalMicros += t;
+    Serial.print(1000.0*FILE_SIZE/t);
+    Serial.print(',');
+    file.rewind();
+    t = micros();
+
+    for (uint32_t n = 0; n < nRdWr; n++) {
+      if ((int)nb != file.read(buf, nb)) {
+        sdEx.errorHalt("read failed");
+      }
+      // crude check of data.
+      if (buf32[0] != n || buf32[nb/4 - 1] != n) {
+        sdEx.errorHalt("data check");
+      }
+    }
+    t = micros() - t;
+    totalMicros += t;
+    Serial.println(1000.0*FILE_SIZE/t);
+  }
+  file.close();
+  Serial.print("\ntotalMicros  ");
+  Serial.println(totalMicros);
+  Serial.print("yieldMicros  ");
+  Serial.println(yieldMicros);
+  Serial.print("yieldCalls   ");
+  Serial.println(yieldCalls);
+  Serial.print("yieldMaxUsec ");
+  Serial.println(yieldMaxUsec);
+  Serial.print("kHzSdClk     ");
+  Serial.println(sdEx.card()->kHzSdClk());
+  Serial.println("Done");
+
+  //   //
+  //   threads.delay(LOOP_TIME);
+  // }
+}
+
+////
+//  public
+//    (non-static global -> extern (public.h))
+////
+
+int __fs_start() {
+  is_running = true;
+  thread_id = threads.addThread(threadedFunc);
+  return (thread_id != -1);   //1 : success, 0 : error
+}
+void __fs_stop() {
+  if (thread_id != -1) {
+    is_running = false;
+    threads.wait(thread_id, 0);   // wait forever. (blocking wait.)
+  }
+}
