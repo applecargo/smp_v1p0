@@ -5,11 +5,7 @@
 //  --> TaskScheduler - 'non-preemptive' threading model
 //  --> https://stackoverflow.com/questions/4147221/preemptive-threads-vs-non-preemptive-threads
 
-//teensythreads
-#include "TeensyThreads.h"
-// --> NB: don't access/use global objects (e.g. Serial etc.)
-//           from different threads simultaneously.
-//         do it, one-by-one (using some locking mechanism).
+//task scheduler
 
 //oled
 #include <SPI.h>
