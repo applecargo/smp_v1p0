@@ -1,5 +1,8 @@
 // SMP v1.0
 
+//arduino
+#include <Arduino.h>
+
 //threading model
 //  --> teensythreads - 'preemptive' threading model
 //  --> TaskScheduler - 'non-preemptive' threading model
@@ -28,6 +31,12 @@
 // void readGPS(void) {
 //   GPS.read(); //read in 1 char.
 // }
+
+//rtc
+#include <TimeLib.h>
+time_t getTeensy3Time() {
+  return Teensy3Clock.get();
+}
 
 //bounce
 #include <Bounce.h>
@@ -92,10 +101,6 @@ File dirFile;
 // Remember which mode we're doing
 int mode = 0;  // 0=stopped, 1=recording, 2=playing
 
-// The file where data is recorded
-// File frec;
-// String filename; // a filename for recording or playing
-
 // // Current time and date
 // String datetime; // from internal timer or RTC and GPS time
 // String location; // from GPS location
@@ -109,7 +114,67 @@ void continuePlaying();
 void stopPlaying();
 void adjustMicLevel();
 
-//threads
+//filename
+String __filenameNowHere = ""; // a filename for recording or playing
+void syncFilenameNowHere() {
+
+  // we start with a new 'empty string'
+  __filenameNowHere = "";
+
+  // 'hour' (KST)
+  int hour_KST = (hour() + 9) % 24; // GMT +9
+  if(hour_KST < 10) __filenameNowHere += '0';
+  __filenameNowHere += hour_KST;
+
+  // .
+  __filenameNowHere += ".";
+
+  // 'minute'
+  if(minute() < 10) __filenameNowHere += '0';
+  __filenameNowHere += minute();
+
+  // .
+  __filenameNowHere += ".";
+
+  // 'second'
+  if(second() < 10) __filenameNowHere += '0';
+  __filenameNowHere += second();
+
+  // (space)
+  __filenameNowHere += " ";
+
+  // 'day'
+  if(day() < 10) __filenameNowHere += '0';
+  __filenameNowHere += day();
+
+  // -
+  __filenameNowHere += "-";
+
+  // 'month'
+  if(month() < 10) __filenameNowHere += '0';
+  __filenameNowHere += month();
+
+  // -
+  __filenameNowHere += "-";
+
+  // 'year'
+  __filenameNowHere += year();
+
+  // @
+  __filenameNowHere += " @ ";
+
+  // 'latitude'
+  __filenameNowHere += "2515.23456N";
+
+  // (space)
+  __filenameNowHere += " ";
+
+  // 'longitude'
+  __filenameNowHere += "12515.23456E";
+
+  // '.RAW'
+  __filenameNowHere += ".RAW";
+}
 
 //// System initialization
 void setup() {
@@ -204,6 +269,15 @@ void setup() {
 
   // //clear oled screen
   // display.clearDisplay();
+
+  //rtc
+  // set the Time library to use Teensy 3.0's RTC to keep time
+  setSyncProvider(getTeensy3Time);
+  if (timeStatus()!= timeSet) {
+    Serial.println("Unable to sync with the RTC");
+  } else {
+    Serial.println("RTC has set the system time");
+  }
 }
 
 void loop() {
@@ -357,7 +431,10 @@ void startRecording() {
   //  --> O_WRITE | O_SYNC | O_TRUNC | O_CREAT | O_EXCL
   //  (although, this doesn't make a good sense, since this file will be always a newly created one..)
 
-  if (!file.open("RECORD-2018-11-21-22-17-35.RAW", O_RDWR | O_CREAT)) {
+  //
+  syncFilenameNowHere();
+
+  if (!file.open(__filenameNowHere.c_str(), O_RDWR | O_CREAT)) {
     sdEx.errorHalt("open failed");
     return;
   }
@@ -444,7 +521,7 @@ void stopRecording() {
 
 void startPlaying() {
   Serial.println("startPlaying");
-  playRaw1.play("RECORD-2018-11-21-22-17-35.RAW");
+  playRaw1.play(__filenameNowHere.c_str());
   mode = 2;
 }
 
