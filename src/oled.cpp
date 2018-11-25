@@ -1,4 +1,4 @@
-#include "public.h"
+#include "global.h"
 //oled
 #include <SPI.h>
 #include <Adafruit_GFX.h>

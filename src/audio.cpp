@@ -1,4 +1,4 @@
-#include "public.h"
+#include "global.h"
 
 //audio
 #include <Audio.h>
@@ -33,6 +33,7 @@ void __audio_setup() {
   //    --> https://forum.pjrc.com/threads/52127-Bits-of-audio-missing-from-recordings?p=178535&viewfull=1#post178535
   //    --> https://forum.pjrc.com/threads/52175-Audio-Recording-Logging-to-SD-card-gt-microSoundRecorder
   //    --> https://forum.pjrc.com/threads/46136-Yet-another-SimpleAudioLogger
+
   //
   // NOTE: Use teensy 3.6 for more buffering !! e.g. > 600
   //

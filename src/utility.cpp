@@ -1,4 +1,4 @@
-#include "public.h"
+#include "global.h"
 
 void __timeandlocation_display() {
   //

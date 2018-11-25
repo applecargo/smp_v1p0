@@ -1,40 +1,29 @@
-// SMP v1.0 - Profiling code
+// SMP v1.0 - dev. and testing
 
-//public
-#include "public.h"
+//global
+#include "global.h"
 
-//
+// operating modes
 const static int SMP_STOPPED = 0;
 const static int SMP_RECORDING = 1;
 const static int SMP_PLAYING = 2;
-//
 int __mode = SMP_STOPPED;
 
-//
+// PROFILE
 int __sdwr_time = 0;
 
-//
 void setup() {
 
-  //serial - debug monitor
+  //serial
   Serial.begin(9600);
-
-  //DEBUG: profiling
-  elapsedMicros usec;
 
   //init. modules
   __oled_setup();
   __gps_setup();
   __rtc_setup();
-  //
   __io_setup();
   __filesystem_setup();
   __audio_setup();
-
-  //DEBUG: profiling
-  Serial.print("[p] setup() took ");
-  Serial.print(usec/1000000.0, 6);
-  Serial.println(" sec.");
 }
 
 void loop() {

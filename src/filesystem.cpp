@@ -1,4 +1,4 @@
-#include "public.h"
+#include "global.h"
 
 //sd filesystem
 #include <SdFat.h>

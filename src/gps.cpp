@@ -1,4 +1,4 @@
-#include "public.h"
+#include "global.h"
 
 //gps
 #include <Adafruit_GPS.h>
