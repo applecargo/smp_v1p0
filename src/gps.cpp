@@ -4,6 +4,13 @@
 #include <Adafruit_GPS.h>
 static Adafruit_GPS GPS(&Serial1);
 
+//timezone
+#include <Timezone.h>
+static TimeChangeRule mySTD = {"KST", First, Sun, Jan, 0, +540};     //Standard time : KST = UTC + 9 hours
+static Timezone myTZ(mySTD, mySTD);    //KST doesn't have DST. (hence, same TCR, twice.)
+static TimeChangeRule *tcr;    //pointer to the time change rule, use to get TZ abbrev
+time_t __local;
+
 //location
 float __longitude = 0.0;
 char __lon = 'X';
@@ -35,6 +42,10 @@ void __gps_setup() {
 
 void __time_location_update() {
 
+  ////
+  // 1) examine GPS time & location
+  ////
+
   bool newGPS = false;
 
   //shortly stop getting more characters
@@ -61,9 +72,6 @@ void __time_location_update() {
     // set rtc
     __rtc_set(now());
 
-    // timezone
-    adjustTime(+9 * SECS_PER_HOUR); // KST
-
     ////
     // update location if there's a fix.
     ////
@@ -76,4 +84,11 @@ void __time_location_update() {
     }
 
   }
+
+  ////
+  // 2) localize the time according to the TZ.
+  ////
+
+  // timezone
+  __local = myTZ.toLocal(now(), &tcr); // tcr : to get TZ abbrev of 'now'
 }

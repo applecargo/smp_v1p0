@@ -36,6 +36,7 @@ extern void __filesystem_listfiles();
 //gps
 extern void __gps_setup();
 extern void __time_location_update();
+extern time_t __local;
 extern float __longitude;
 extern char __lon;
 extern float __latitude;
