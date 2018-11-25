@@ -4,6 +4,16 @@
 #include "public.h"
 
 //
+const static int SMP_STOPPED = 0;
+const static int SMP_RECORDING = 1;
+const static int SMP_PLAYING = 2;
+//
+int __mode = SMP_STOPPED;
+
+//
+int __sdwr_time = 0;
+
+//
 void setup() {
 
   //serial - debug monitor
@@ -16,9 +26,10 @@ void setup() {
   __oled_setup();
   __gps_setup();
   __rtc_setup();
-  // __filesystem_setup();
-  // __io_setup();
-  // __audio_setup();
+  //
+  __io_setup();
+  __filesystem_setup();
+  __audio_setup();
 
   //DEBUG: profiling
   Serial.print("[p] setup() took ");
@@ -27,6 +38,9 @@ void setup() {
 }
 
 void loop() {
+  //
+  static String filetorec;
+  static String filetoplay;
 
   //clear screen
   __display->clearDisplay();
@@ -34,119 +48,103 @@ void loop() {
   __display->setTextColor(WHITE);
   __display->setCursor(0,0);
 
+  //DEBUG: profiling
+  static elapsedMicros looptime = 0;
+  __display->print("loop : "); __display->print(looptime/1000000.0, 6); __display->println(" sec.");
+  looptime = 0;
+
   //time, date, location
   __time_location_update();
 
-  //
-  if(hour(__local) < 10) __display->print('0');
-  __display->print(hour(__local));
-  __display->print(".");
-  if(minute(__local) < 10) __display->print('0');
-  __display->print(minute(__local));
-  __display->print(".");
-  if(second(__local) < 10) __display->print('0');
-  __display->println(second(__local));
-  __display->print(" ");
-  if(day(__local) < 10) __display->print('0');
-  __display->print(day(__local));
-  __display->print("-");
-  if(month(__local) < 10) __display->print('0');
-  __display->print(month(__local));
-  __display->print("-");
-  __display->println(year(__local));
-  __display->print(" @ ");
-  __display->print(__latitude, 6);
-  __display->println(__lat);
-  __display->print("   ");
-  __display->print(__longitude, 6);
-  __display->println(__lon);
+  //DEBUG : time & location display on the screen.
+  __timeandlocation_display();
 
-  // //many different measurements
-  // static elapsedMicros looptime = 0;
-  // static elapsedMicros looptime_buttons = 0;
-  // static elapsedMicros looptime_audio = 0;
-  // static elapsedMicros looptime_sdwr = 0;
-  // static elapsedMicros looptime_dpdp = 0;
-  // static elapsedMicros looptime_dpoth = 0;
-  // static elapsedMicros looptime_dpclr = 0;
-  //
-  // //
-  // looptime_dpclr = 0;
-  // //
+  //button i/o
+  __io_loop();
 
-  // //
-  // __display->print("dclr : ");
-  // __display->print(looptime_dpclr/1000000.0, 6);
-  // __display->println(" sec.");
-  //
-  // //DEBUG: profiling
-  // __display->print("loop : "); __display->print(looptime/1000000.0, 6); __display->println(" sec.");
-  // looptime = 0;
-  //
-  // __io_loop();
-  //
-  // //DEBUG: profiling
-  // looptime_buttons = 0;
-  //
-  // // Respond to button presses
-  // if (__buttonRecord.fallingEdge()) {
-  //   Serial.println("Record Button Press");
-  //   if (__mode == 2) __audio_stop_playing();
-  //   if (__mode == 0) __audio_start_recording();
-  // }
-  // if (__buttonStop.fallingEdge()) {
-  //   Serial.println("Stop Button Press");
-  //   if (__mode == 1) __audio_stop_recording();
-  //   if (__mode == 2) __audio_stop_playing();
-  // }
-  // if (__buttonPlay.fallingEdge()) {
-  //   Serial.println("Play Button Press");
-  //   if (__mode == 1) __audio_stop_recording();
-  //   if (__mode == 0) __audio_start_playing();
-  // }
+  // 'record' button
+  if (__buttonRecord.fallingEdge()) {
+    Serial.println("Record Button Press");
 
-  // //DEBUG: profiling
-  // __display->print("butt : "); __display->print(looptime_buttons/1000000.0, 6); __display->println(" sec.");
-  //
-  // //DEBUG: profiling
-  // looptime_audio = 0;
-  //
-  // // If we're playing or recording, carry on...
-  // if (mode == 1) {
-  //   __audio_continue_recording();
-  // }
-  // if (mode == 2) {
-  //   __audio_continue_playing();
-  // }
-  //
-  // __audio_adjust_mic_level();
-  //
-  // //DEBUG: profiling
-  // __display->print("audi : "); __display->print(looptime_audio/1000000.0, 6); __display->println(" sec.");
-  //
-  // //DEBUG: profiling
-  // looptime_dpoth = 0;
-  //
-  // // int mode = 0;  // 0=stopped, 1=recording, 2=playing
-  // switch (__mode) {
-  // case 0:
-  //   __display->println("stopped.");
-  //   break;
-  // case 1:
-  //   __display->println("recording.");
-  //   break;
-  // case 2:
-  //   __display->println("playing.");
-  //   break;
-  // default:
-  //   ;
-  // }
-  //
-  // //DEBUG: profiling
-  // __display->print("doth : "); __display->print(looptime_dpoth/1000000.0, 6); __display->println(" sec.");
-  //
-  // //DEBUG : profiling..
-  // looptime_dpdp = 0;
+    if (__mode == SMP_PLAYING) {
+      __audio_stop_playing();
+      __mode = SMP_STOPPED;
+    }
+
+    if (__mode == SMP_STOPPED) {
+      if ((filetorec = __audio_start_recording()) == "") {
+        Serial.println("audio recording start error!");
+      } else {
+        Serial.println("audio recording start success!");
+        __mode = SMP_RECORDING;
+      }
+    }
+  }
+
+  // 'stop' button
+  if (__buttonStop.fallingEdge()) {
+
+    Serial.println("Stop Button Press");
+
+    if (__mode == SMP_RECORDING) {
+      __audio_stop_recording();
+      filetoplay = filetorec;
+    }
+
+    if (__mode == SMP_PLAYING) {
+      __audio_stop_playing();
+    }
+
+    __mode = SMP_STOPPED;
+  }
+
+  // 'play' button
+  if (__buttonPlay.fallingEdge()) {
+    Serial.println("Play Button Press");
+
+    if (__mode == SMP_RECORDING) {
+      __audio_stop_recording();
+      filetoplay = filetorec;
+      __mode = SMP_STOPPED;
+    }
+
+    if (__mode == SMP_STOPPED) {
+      if (__audio_start_playing(filetoplay) == false) {
+        Serial.println("audio playing start error!");
+      } else {
+        Serial.println("audio playing start success!");
+        __mode = SMP_PLAYING;
+      }
+    }
+  }
+
+  // check if it is still playing audio or not.
+  if (__mode == SMP_PLAYING) {
+    if (__audio_is_playing() == false) {
+      //play done.
+      __mode = SMP_STOPPED;
+    }
+  }
+
+  // int mode = 0;  // 0=stopped, 1=recording, 2=playing
+  switch (__mode) {
+  case 0:
+    __display->println("stopped.");
+    break;
+  case 1:
+    __display->println("recording.");
+    break;
+  case 2:
+    __display->println("playing.");
+    break;
+  default:
+    ;
+  }
+
+  //DEBUG : sdwr time
+  __display->print("sdwr > 1e5 : ");
+  __display->println(__sdwr_time);
+
+  //splash!
   __display->display();
-  // Serial.print("dpdp : "); Serial.print(looptime_dpdp/1000000.0, 6); Serial.println(" sec.");
 }

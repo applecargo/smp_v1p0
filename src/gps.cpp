@@ -12,10 +12,10 @@ static TimeChangeRule *tcr;    //pointer to the time change rule, use to get TZ 
 time_t __local;
 
 //location
-float __longitude = 0.0;
-char __lon = 'X';
 float __latitude = 0.0;
-char __lat = 'Y';
+char __lat = 'X';
+float __longitude = 0.0;
+char __lon = 'Y';
 
 //timer1
 #include <TimerOne.h>
