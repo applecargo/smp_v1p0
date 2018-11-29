@@ -4,6 +4,11 @@
 #include <Adafruit_GPS.h>
 static Adafruit_GPS GPS(&Serial1);
 
+//NOTE:
+//  --> we are using adafruit gps library but not actually using their product. : we use 'ublox NEO 6'
+//  --> since, we are only interested in NMEA strings. this just works.
+//  --> if one is interested more advanced case, try TinyGPS or TinyGPSPlus library for more in-depth control.
+
 //timezone
 #include <Timezone.h>
 static TimeChangeRule mySTD = {"KST", First, Sun, Jan, 0, +540};     //Standard time : KST = UTC + 9 hours
@@ -16,6 +21,8 @@ float __latitude = 0.0;
 char __lat = 'X';
 float __longitude = 0.0;
 char __lon = 'Y';
+int __nsat = 0;
+bool __gotfix = false;
 
 //timer1
 #include <TimerOne.h>
@@ -26,18 +33,13 @@ void readGPS(void) {
 
 //
 void __gps_setup() {
+
   //serial1 - GPS comm.
   GPS.begin(9600);
-  GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
-  GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);     // 1 Hz update rate
-  GPS.sendCommand(PGCMD_ANTENNA);
+
   //timer1 - readGPS() - read in 1 char.
   Timer1.initialize(1000); //1ms
   Timer1.attachInterrupt(readGPS);
-  //
-  delay(1000);
-  // Ask for firmware version
-  Serial1.println(PMTK_Q_RELEASE);
 }
 
 void __time_location_update() {
@@ -81,6 +83,11 @@ void __time_location_update() {
       __lat = GPS.lat;
       __longitude = GPS.longitude;
       __lon = GPS.lon;
+
+      //DEBUG : n of sat.
+      __nsat = (int)GPS.satellites;
+
+      __gotfix = true;
     }
 
   }

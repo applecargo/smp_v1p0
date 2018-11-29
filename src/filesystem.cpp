@@ -4,6 +4,10 @@
 #include <SdFat.h>
 static SdFatSdioEX sdEx;
 
+//file list
+const uint16_t FS_LS_MAX = 1024;
+uint16_t __filesystem_list[FS_LS_MAX];
+
 void __filesystem_setup() {
   //sd filesystem
 
@@ -26,15 +30,13 @@ void __filesystem_listfiles() {
     sdEx.errorHalt("open root failed");
   }
   uint16_t n = 0;
-  const uint16_t nMax = 10;
-  uint16_t dirIndex[nMax];
-  while (n < nMax && file.openNext(&dirFile, O_READ)) {
+  while (n < FS_LS_MAX && file.openNext(&dirFile, O_READ)) {
 
     // Skip directories and hidden files.
     if (!file.isSubDir() && !file.isHidden()) {
 
       // Save dirIndex of file in directory.
-      dirIndex[n] = file.dirIndex();
+      __filesystem_list[n] = file.dirIndex();
 
       // Print the file number and name.
       Serial.print(n++);
@@ -171,6 +173,24 @@ String __filesystem_open_file_for_recording(File * file) {
     return ""; // error.
   }
   else {
+    //
+    // NOTE: FAT32 filestamp is localtime, NOT UTC time.
+    //   we need to respect on this, cause every other systems do respect on this, too.
+    //   currently only linux machines don't respect on this.
+    //   --> https://huiminee.wordpress.com/2017/02/20/debian-bug-fat32-timestamp-offset-issue/
+    //
+    // set creation date time
+    if (!file->timestamp(T_CREATE, year(__local), month(__local), day(__local), hour(__local), minute(__local), second(__local))) {
+      sdEx.errorHalt("set create time failed");
+    }
+    // set write/modification date time
+    if (!file->timestamp(T_WRITE, year(__local), month(__local), day(__local), hour(__local), minute(__local), second(__local))) {
+      sdEx.errorHalt("set modified time failed");
+    }
+    // set access date
+    if (!file->timestamp(T_ACCESS, year(__local), month(__local), day(__local), hour(__local), minute(__local), second(__local))) {
+      sdEx.errorHalt("set access time failed");
+    }
     file->truncate(0);
     return filenameNowHere; // no error
   }
