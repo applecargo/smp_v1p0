@@ -28,4 +28,5 @@ void __oled_setup() {
 
   //clear oled screen
   __display->clearDisplay();
+  __display->display();
 }
