@@ -24,6 +24,9 @@ static File frec;
 #include <TimerThree.h>
 #define T3_INTERVAL_RECORDING 4000 //usec --> 4ms
 
+// PROFILE
+int __sdwr_time = -1;
+
 void __audio_setup() {
   // Audio connections require memory, and the record queue
   // uses this memory to buffer incoming audio.

@@ -7,12 +7,20 @@
 #include <SdFat.h>
 
 //main
+// operating modes
+#define SMP_STOPPED 0x00
+#define SMP_RECORDING 0x01
+#define SMP_PLAYING 0x02
+#define SMP_LISTING 0x03
+#define SMP_DELETE_ASK 0x04
+#define SMP_DELETE_CONFIRM 0x05
 extern int __mode;
-extern int __sdwr_time;
-//
-extern const int SMP_DEV_OFF;
-extern const int SMP_DEV_ON;
+// developer's mode toggle
+#define SMP_DEV_OFF 0x10
+#define SMP_DEV_ON 0x11
 extern int __devmode;
+// profiling of loop()
+extern elapsedMicros __looptime;
 
 //io
 extern Bounce __buttonRecord;
@@ -29,8 +37,11 @@ extern void __io_enc_setzero();
 extern Adafruit_SSD1306 * __display;
 extern void __oled_setup();
 extern void __oled_loop();
+extern void __oled_userscreen();
+extern void __oled_devscreen();
 
 //audio
+extern int __sdwr_time;
 extern void __audio_setup();
 //
 extern String __audio_start_recording();
