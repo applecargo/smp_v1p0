@@ -19,7 +19,7 @@ void __io_setup() {
   pinMode(25, INPUT_PULLUP);
 }
 
-void __io_loop() {
+void __io_button_read() {
   __buttonRecord.update();
   __buttonStop.update();
   __buttonPlay.update();

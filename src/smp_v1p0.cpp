@@ -35,7 +35,7 @@ void loop() {
   __time_location_update();
 
   //button i/o
-  __io_loop();
+  __io_button_read();
   __io_enc_read();
 
   // 'record' button

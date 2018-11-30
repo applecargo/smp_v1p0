@@ -25,7 +25,7 @@ static File frec;
 #define T3_INTERVAL_RECORDING 4000 //usec --> 4ms
 
 // PROFILE
-int __sdwr_time = -1;
+unsigned int __sdwr_time = 0;
 
 void __audio_setup() {
   // Audio connections require memory, and the record queue

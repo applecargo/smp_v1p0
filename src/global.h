@@ -28,7 +28,7 @@ extern Bounce __buttonStop;
 extern Bounce __buttonPlay;
 extern Bounce __buttonWhlClk;
 extern void __io_setup();
-extern void __io_loop();
+extern void __io_button_read();
 extern long __io_enc_read();
 extern void __io_enc_write(long val);
 extern void __io_enc_setzero();
@@ -41,17 +41,14 @@ extern void __oled_userscreen();
 extern void __oled_devscreen();
 
 //audio
-extern int __sdwr_time;
+extern unsigned int __sdwr_time;
 extern void __audio_setup();
-//
 extern String __audio_start_recording();
 extern void __audio_continue_recording();
 extern void __audio_stop_recording();
-//
 extern bool __audio_start_playing(String filetoplay);
 extern bool __audio_is_playing();
 extern void __audio_stop_playing();
-//
 extern void __audio_adjust_mic_level();
 
 //filesystem
@@ -76,6 +73,3 @@ extern bool __gotfix;
 //rtc
 extern void __rtc_setup();
 extern void __rtc_set(time_t t);
-
-//utility
-extern void __timeandlocation_display();
