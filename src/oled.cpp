@@ -14,6 +14,7 @@ Adafruit_SSD1306 * __display;
 
 //fonts
 #include <Fonts/LiberationSans_Regular5pt7b.h> // (almost) same as 'Arial'
+#include <Fonts/LiberationSans_Regular7pt7b.h> // (almost) same as 'Arial'
 #include <Fonts/LiberationSans_Regular9pt7b.h> // (almost) same as 'Arial'
 
 void __oled_setup() {
@@ -121,6 +122,28 @@ void __oled_userscreen() {
 
   //line #3 : operation mode (big font)
   __oled_mode();
+
+  //splash!
+  __display->display();
+}
+
+void __oled_userscreen_list() {
+
+  //clear oled screen
+  __display->clearDisplay();
+
+  //
+  __oled_fixmarker();
+
+  //line #1 : date (small font)
+  __display->setFont(&LiberationSans_Regular7pt7b);
+  __display->setTextSize(1);
+  __display->setTextColor(WHITE);
+  // __display->setCursor(38,12);
+  __display->setCursor(0,12);
+
+  //
+  __filesystem_listfiles(0, 3);
 
   //splash!
   __display->display();

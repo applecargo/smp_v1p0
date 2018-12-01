@@ -24,6 +24,9 @@ void setup() {
   __io_setup();
   __filesystem_setup();
   __audio_setup();
+
+  //
+  delay(1000);
 }
 
 void loop() {
@@ -119,12 +122,30 @@ void loop() {
     }
   }
 
+  // list mode counter
+  static int list_count = 0;
+  if (__mode == SMP_LISTING) {
+    if (list_count == 0) {
+      __mode = SMP_STOPPED;
+    } else {
+      list_count = list_count - 1;
+    }
+  }
+
   // encoder event.
   static long oldPos = -999;
   long newPos = __io_enc_read();
+  if (newPos < 0) {
+    newPos = 0;
+    __io_enc_setzero();
+  }
   if (newPos != oldPos) {
     oldPos = newPos;
+    Serial.print("enc:");
     Serial.println(newPos);
+    // __mode = SMP_LISTING;
+    list_count = 1000;
+    Serial.println(__filesystem_get_nth_filename(newPos));
   }
 
   // check if it is still playing audio or not.
@@ -146,6 +167,10 @@ void loop() {
     __oled_devscreen();
   } else {
     //normal screen for users
-    __oled_userscreen();
+    if (__mode == SMP_LISTING) {
+      // __oled_userscreen_list();
+    } else {
+      __oled_userscreen();
+    }
   }
 }

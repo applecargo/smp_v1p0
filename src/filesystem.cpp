@@ -4,49 +4,80 @@
 #include <SdFat.h>
 static SdFatSdioEX sdEx;
 
-//file list
-const uint16_t FS_LS_MAX = 1024;
-uint16_t __filesystem_list[FS_LS_MAX];
-
 void __filesystem_setup() {
-  //sd filesystem
-
   // Initialize the SD card
   if (!sdEx.begin()) {
     sdEx.initErrorHalt("SdFatSdioEX begin() failed");
   }
   // make sdEx the current volume.
   sdEx.chvol();
-
 }
 
-void __filesystem_listfiles() {
-  //
-  File file;
-  File dirFile;
-
-  // List files in root directory.
+//update n. of files @ root (excluding hidden folder & sub-directory entries!)
+static int __filesystem_get_nfiles() {
+  int nfiles = 0;
+  File file, dirFile;
   if (!dirFile.open("/", O_READ)) {
     sdEx.errorHalt("open root failed");
   }
-  uint16_t n = 0;
-  while (n < FS_LS_MAX && file.openNext(&dirFile, O_READ)) {
-
-    // Skip directories and hidden files.
+  while (file.openNext(&dirFile, O_READ)) {
     if (!file.isSubDir() && !file.isHidden()) {
-
-      // Save dirIndex of file in directory.
-      __filesystem_list[n] = file.dirIndex();
-
-      // Print the file number and name.
-      Serial.print(n++);
-      Serial.write(' ');
-      file.printName(&Serial);
-      Serial.println();
+      nfiles++;
     }
     file.close();
   }
+  return nfiles;
+}
+
+//getting nth file in a root directory (excluding hidden folder & sub-directory entries!)
+String __filesystem_get_nth_filename(int n) {
+  //
+  File file, dirFile;
+  int nfiles = __filesystem_get_nfiles();
+  Serial.print("nfiles:");
+  Serial.println(nfiles);
+
+  //parameter n must be in the range of (1 ~ 'nfiles')
+  if (n < 1 || n > nfiles) return ""; //error
+
+  // open root('/')
+  if (!dirFile.open("/", O_READ)) {
+    sdEx.errorHalt("open root failed");
+  }
+
+  //skip n entries (n == 1 --> no skip.), ...
+  //  --> hidden file or sub-dir. will be ignored additionally!
+  for (int idx = 1; idx < n; ) {
+    file.openNext(&dirFile, O_READ);
+    if(!file.isSubDir() && !file.isHidden()) {
+      idx++;
+    }
+    file.close();
+  }
+  // what if it is hidden file or sub-dir? --> skip more!
+  while(1) {
+    file.openNext(&dirFile, O_READ);
+    if(!file.isSubDir() && !file.isHidden()) {
+      break;
+    }
+    file.close();
+  }
+
+  //return value
+  const size_t filename_max = 256;
+  char filename[filename_max] = "";
+  String str = "";
+  //
+  if(file.getName(filename, filename_max)) {
+    str = String(filename);
+  }
+  else sdEx.errorHalt("getName failed.");
+
+  //
+  file.close();
   dirFile.close();
+
+  return str; //"" : error, "something" : no error
 }
 
 void __filesystem_errorHalt(const char* msg) {

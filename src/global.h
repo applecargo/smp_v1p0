@@ -54,10 +54,8 @@ extern void __audio_adjust_mic_level();
 //filesystem
 extern void __filesystem_setup();
 extern void __filesystem_errorHalt(const char* msg);
-extern void __filesystem_listfiles();
-// extern const uint16_t FS_LS_MAX;
-// extern uint16_t * __filesystem_list; // [FS_LS_MAX]
 extern String __filesystem_open_file_for_recording(File * file);
+extern String __filesystem_get_nth_filename(int n);
 
 //gps
 extern void __gps_setup();
