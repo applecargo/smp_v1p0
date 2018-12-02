@@ -70,9 +70,6 @@ static void __oled_mode() {
   case SMP_PLAYING:
     __display->println("playing.");
     break;
-  case SMP_LISTING:
-    // __display->println("listing.");
-    break;
   default:
     ;
   }
@@ -127,7 +124,54 @@ void __oled_userscreen() {
   __display->display();
 }
 
-void __oled_userscreen_list() {
+void __oled_userscreen_recording_start() {
+
+  //clear oled screen
+  __display->clearDisplay();
+
+  //frame
+  __display->drawRect(0, 0, 128, 64, WHITE);
+
+  //line #1 : "Recording..."
+  __display->setFont(&LiberationSans_Regular9pt7b);
+  __display->setTextSize(1);
+  __display->setTextColor(WHITE);
+  // __display->setCursor(38,12);
+  __display->setCursor(8,20);
+
+  //
+  __display->println("Recording...");
+
+  //line #2 : date (small font)
+  __display->setFont();
+  __display->setTextSize(1);
+  __display->setTextColor(WHITE);
+  // __display->setCursor(38,12);
+  __display->setCursor(6,50);
+
+  //
+  __display->print(year(__local));
+  __display->print("-");
+  if(month(__local) < 10) __display->print('0');
+  __display->print(month(__local));
+  __display->print("-");
+  if(day(__local) < 10) __display->print('0');
+  __display->print(day(__local));
+  __display->print(" ");
+  if(hour(__local) < 10) __display->print('0');
+  __display->print(hour(__local));
+  __display->print(".");
+  if(minute(__local) < 10) __display->print('0');
+  __display->print(minute(__local));
+  __display->print(".");
+  if(second(__local) < 10) __display->print('0');
+  __display->println(second(__local));
+
+  //splash!
+  __display->display();
+}
+
+void __oled_userscreen_browse() {
 
   //clear oled screen
   __display->clearDisplay();
@@ -135,7 +179,7 @@ void __oled_userscreen_list() {
   //
   __oled_fixmarker();
 
-  //line #1 : date (small font)
+  //small font
   __display->setFont(&LiberationSans_Regular7pt7b);
   __display->setTextSize(1);
   __display->setTextColor(WHITE);
@@ -143,7 +187,20 @@ void __oled_userscreen_list() {
   __display->setCursor(0,12);
 
   //
-  __filesystem_listfiles(0, 3);
+  String filename = __filesystem_get_nth_filename(__io_enc_read());
+  int nfiles = __filesystem_get_nfiles();
+  Serial.println(filename);
+
+  //line #1 : time
+  __display->println(filename.substring(0, 8));
+
+  //line #2 : date
+  __display->println(filename.substring(9, 19));
+
+  //line #3 : index/nindex
+  __display->print(__io_enc_read());
+  __display->print("/");
+  __display->println(nfiles);
 
   //splash!
   __display->display();

@@ -14,7 +14,7 @@ void __filesystem_setup() {
 }
 
 //update n. of files @ root (excluding hidden folder & sub-directory entries!)
-static int __filesystem_get_nfiles() {
+int __filesystem_get_nfiles() {
   int nfiles = 0;
   File file, dirFile;
   if (!dirFile.open("/", O_READ)) {
@@ -34,33 +34,34 @@ String __filesystem_get_nth_filename(int n) {
   //
   File file, dirFile;
   int nfiles = __filesystem_get_nfiles();
-  Serial.print("nfiles:");
-  Serial.println(nfiles);
 
   //parameter n must be in the range of (1 ~ 'nfiles')
   if (n < 1 || n > nfiles) return ""; //error
+
+  //reversed order.
+  n = nfiles - n + 1; // again, '1 < n < nfiles'
 
   // open root('/')
   if (!dirFile.open("/", O_READ)) {
     sdEx.errorHalt("open root failed");
   }
 
-  //skip n entries (n == 1 --> no skip.), ...
+  //skip n - 1 entries (i.e. n == 1 --> no skip.), ...
   //  --> hidden file or sub-dir. will be ignored additionally!
-  for (int idx = 1; idx < n; ) {
+  for (int idx = 0; idx < (n - 1); ) {
     file.openNext(&dirFile, O_READ);
-    if(!file.isSubDir() && !file.isHidden()) {
+    if(!file.isSubDir() && !file.isHidden()) { // for hidden files or sub-dir. we don't increase index. (completely ignore their existence.)
       idx++;
     }
     file.close();
   }
-  // what if it is hidden file or sub-dir? --> skip more!
+  // what if it is hidden file or sub-dir at this position? --> skip them out!
   while(1) {
-    file.openNext(&dirFile, O_READ);
-    if(!file.isSubDir() && !file.isHidden()) {
+    file.openNext(&dirFile, O_READ); // try...
+    if(!file.isSubDir() && !file.isHidden()) { // if it is ordinary file. then, break. let's work with this file.
       break;
     }
-    file.close();
+    file.close(); // otherwise, skip and investigate next one.
   }
 
   //return value

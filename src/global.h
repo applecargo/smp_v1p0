@@ -39,6 +39,8 @@ extern void __oled_setup();
 extern void __oled_loop();
 extern void __oled_userscreen();
 extern void __oled_devscreen();
+extern void __oled_userscreen_browse();
+extern void __oled_userscreen_recording_start();
 
 //audio
 extern unsigned int __sdwr_time;
@@ -55,6 +57,7 @@ extern void __audio_adjust_mic_level();
 extern void __filesystem_setup();
 extern void __filesystem_errorHalt(const char* msg);
 extern String __filesystem_open_file_for_recording(File * file);
+extern int __filesystem_get_nfiles();
 extern String __filesystem_get_nth_filename(int n);
 
 //gps

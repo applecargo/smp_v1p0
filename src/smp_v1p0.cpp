@@ -5,6 +5,7 @@
 
 //operating modes
 int __mode = SMP_STOPPED;
+int __mode_prev = SMP_STOPPED;
 
 //developer mode
 int __devmode = SMP_DEV_OFF;
@@ -17,6 +18,9 @@ void setup() {
   //serial
   Serial.begin(9600);
 
+  //DEBUG: to wait host's serial start-up (using 'platformio')
+  delay(1000);
+
   //init. modules
   __oled_setup();
   __gps_setup();
@@ -24,9 +28,6 @@ void setup() {
   __io_setup();
   __filesystem_setup();
   __audio_setup();
-
-  //
-  delay(1000);
 }
 
 void loop() {
@@ -51,6 +52,9 @@ void loop() {
     }
 
     if (__mode == SMP_STOPPED) {
+      //
+      __oled_userscreen_recording_start();
+
       if ((filetorec = __audio_start_recording()) == "") {
         Serial.println("audio recording start error!");
       } else {
@@ -87,7 +91,7 @@ void loop() {
       __mode = SMP_STOPPED;
     }
 
-    if (__mode == SMP_STOPPED) {
+    if (__mode == SMP_LISTING || __mode == SMP_STOPPED) {
       if (__audio_start_playing(filetoplay) == false) {
         Serial.println("audio playing start error!");
       } else {
@@ -133,7 +137,7 @@ void loop() {
   }
 
   // encoder event.
-  static long oldPos = -999;
+  static long oldPos = 0;
   long newPos = __io_enc_read();
   if (newPos < 0) {
     newPos = 0;
@@ -143,9 +147,10 @@ void loop() {
     oldPos = newPos;
     Serial.print("enc:");
     Serial.println(newPos);
-    // __mode = SMP_LISTING;
-    list_count = 1000;
-    Serial.println(__filesystem_get_nth_filename(newPos));
+    __mode = SMP_LISTING;
+    list_count = 200;
+    filetoplay = __filesystem_get_nth_filename(newPos);
+    Serial.println(filetoplay);
   }
 
   // check if it is still playing audio or not.
@@ -168,8 +173,8 @@ void loop() {
   } else {
     //normal screen for users
     if (__mode == SMP_LISTING) {
-      // __oled_userscreen_list();
-    } else {
+      __oled_userscreen_browse();
+    } else if (__mode != SMP_RECORDING) { // we should not update screen while we're recording.. well.. in practice.. if u do draw screen, then at some point we will have a prob.
       __oled_userscreen();
     }
   }
