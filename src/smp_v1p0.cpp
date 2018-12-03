@@ -5,6 +5,8 @@
 
 //operating modes
 int __mode = SMP_IDLE;
+int __mode_return = SMP_IDLE;
+int __mode_prev = SMP_IDLE;
 
 //developer mode
 int __devmode = SMP_DEV_OFF;
@@ -44,12 +46,16 @@ void loop() {
   __io_buttons_update();
 
   //mode transitions
-  static const unsigned long list_timeout = 3000; // 3sec.
-  static elapsedMillis list_msec = 0;
   static int list_file_idx = 0;
   static bool list_file_first = true;
+  static bool scanmode_try = false;
   switch (__mode)
   {
+  case SMP_INFOMSG:
+    if (__buttonStop.fallingEdge()) {
+      __mode = __mode_return;
+    }
+    break;
   case SMP_IDLE:
     //screen
     if (__devmode == SMP_DEV_ON) __oled_devscreen();
@@ -93,7 +99,13 @@ void loop() {
     }
     //on 'encoder events'
     if (__io_enc_event != ENC_NOEVENT) {
-      list_msec = 0;
+      //if there is no file, then disable SMP_LISTING mode.
+      if (__fs_nfiles < 1) {
+        __oled_userscreen_infomsg("No files! \nPlease make at least 1 file by recording.");
+        __mode_return = SMP_IDLE;
+        __mode = SMP_INFOMSG;
+        break;
+      }
       //remind where we were beforehand?
       if (list_file_first == true) {
         list_file_first = false;
@@ -106,6 +118,7 @@ void loop() {
         }
       }
       __mode = SMP_LISTING;
+      scanmode_try = false;
     }
     break;
   case SMP_RECORDING:
@@ -156,19 +169,17 @@ void loop() {
     }
     break;
   case SMP_LISTING:
-    //time-out
-    if (list_msec > list_timeout) {
-      __mode = SMP_IDLE;
-    }
-    //on 'encoder turn right'
+    //SCANNING & LISTING modes assumes that there's at least 1 file in the sd card.
+    //NOTE,TODO: we need to check if __fs_nfiles >= 1, otherwise, we should block entering this mode.
+    //  --> __fs_nfiles == 0, when u firstly started to use this. with empty sd card!
+    //on 'encoder events'
     if (__io_enc_event == ENC_TURN_RIGHT) {
-      list_file_idx = list_file_idx + 1;
-      list_msec = 0; //reset timer
+      if (list_file_idx == __fs_nfiles) list_file_idx = 1; //loop - beginning
+      else list_file_idx = list_file_idx + 1; //next
     }
-    //on 'encoder turn left'
     if (__io_enc_event == ENC_TURN_LEFT) {
-      list_file_idx = list_file_idx - 1;
-      list_msec = 0; //reset timer
+      if (list_file_idx == 1) list_file_idx = __fs_nfiles; //loop - end
+      else list_file_idx = list_file_idx - 1; //prev
     }
     //limit index
     if (list_file_idx < 1) list_file_idx = 1;
@@ -185,30 +196,69 @@ void loop() {
         __mode = SMP_PLAYING;
       }
     }
-    // //on 'encoder event + wheel click button pressed down'
-    // if (__io_enc_event != ENC_NOEVENT && __buttonWhlClk.read() == LOW) {
-    //   //stop current. if playing.
-    //   if (__audio_is_playing() == true) {
-    //     __audio_stop_playing();
-    //   }
-    //   //and start a new one.
-    //   if (__audio_start_playing(filetoplay) == false) {
-    //     Serial.println("audio playing start error!");
-    //   } else {
-    //     Serial.println("audio playing start success!");
-    //   }
-    // }
-    // //on 'file-end'
-    // if (__audio_is_playing() == false) {
-    //   __audio_stop_playing();
-    // }
-    // //on 'playing' --> delay time-out, and activate 'stop' button.
-    // if (__audio_is_playing() == true) {
-    //   list_msec = 0;
-    //   if (__buttonStop.fallingEdge()) {
-    //     __audio_stop_playing();
-    //   }
-    // }
+    //on 'stop'
+    if (__buttonStop.fallingEdge()) {
+      __mode = SMP_IDLE;
+    }
+    //on 'wheel click button - long pressed'
+    static const unsigned long scanmode_timeout = 2000; // 2sec.
+    static elapsedMillis scanmode_msec = 0;
+    //activation of SCANNING state.
+    if (__buttonWhlClk.fallingEdge() && scanmode_try == false) {
+      scanmode_try = true; // now, start waiting..
+      scanmode_msec = 0;
+    }
+    if (__buttonWhlClk.read() == HIGH) {
+      scanmode_try = false; // now, stop waiting..
+    }
+    if (scanmode_try == true && scanmode_msec > scanmode_timeout) {
+      __mode = SMP_SCANNING; // and, go to SCANNING state.
+    }
+    break;
+  case SMP_SCANNING:
+    //SCANNING & LISTING modes assumes that there's at least 1 file in the sd card.
+    //NOTE,TODO: we need to check if __fs_nfiles >= 1, otherwise, we should block entering this mode.
+    //  --> __fs_nfiles == 0, when u firstly started to use this. with empty sd card!
+
+    //on 'file-end', on 'encoder event'
+    if (__io_enc_event == ENC_TURN_RIGHT) {
+      if (list_file_idx == __fs_nfiles) list_file_idx = 1; //loop - beginning
+      else list_file_idx = list_file_idx + 1; //next
+    }
+    if (__io_enc_event == ENC_TURN_LEFT || __audio_is_playing() == false) {
+      if (scanmode_try == false) { // if this it first entry, don't change list_file_idx!!
+        if (list_file_idx == 1) list_file_idx = __fs_nfiles; //loop - end
+        else list_file_idx = list_file_idx - 1; //prev
+      }
+    }
+    //limit index for safety.
+    if (list_file_idx < 1) list_file_idx = 1;
+    if (list_file_idx > __fs_nfiles) list_file_idx = __fs_nfiles;
+    //re-scheduling needed: on 'encoder event' --> stop (this will later trigger a new playback.)
+    if (__io_enc_event != ENC_NOEVENT) {
+      __audio_stop_playing();
+      while(__audio_is_playing() == true) { delay(10); }   // blocking wait.
+    }
+    //we need a new file?
+    if (__audio_is_playing() == false) {
+      //register 'filename' to be played at any time. (scheduling)
+      filetoplay = __filesystem_get_nth_filename(list_file_idx);
+      if (__audio_start_playing(filetoplay) == false) {
+        Serial.println("audio playing start error!");
+      } else {
+        Serial.println("audio playing start success!");
+        delay(100); // wait a bit. to make sure that this goes 'official'.
+      }
+    }
+    //screen
+    __oled_userscreen_browse(list_file_idx, filetoplay);
+    //on 'stop' -> return to SMP_LISTING...
+    if (__buttonStop.fallingEdge()) {
+      __audio_stop_playing();
+      __mode = SMP_LISTING;
+    }
+    //first entry checker. --> clear here.
+    if (scanmode_try == true) scanmode_try = false;
     break;
   case SMP_DELETE_ASK:
     break;
@@ -218,7 +268,15 @@ void loop() {
     ;
   }
 
-  // automatic gain control for mic.
+//
+  if (__mode != __mode_prev) {
+    Serial.println(__mode);
+  }
+
+//
+  __mode_prev = __mode;
+
+// automatic gain control for mic.
   if (__mode == SMP_RECORDING) {
     __audio_adjust_mic_level();
   }

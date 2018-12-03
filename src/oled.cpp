@@ -138,6 +138,32 @@ void __oled_devscreen() {
   __display->display();
 }
 
+void __oled_userscreen_infomsg(String msg) {
+
+  //clear oled screen
+  __display->clearDisplay();
+
+  //header
+  __display->drawFastHLine(0, 0, 128, WHITE);
+  __display->drawFastHLine(0, 3, 128, WHITE);
+
+  //line #1 : info. msg. (small font)
+  __display->setFont(&LiberationSans_Regular5pt7b);
+  __display->setTextSize(1);
+  __display->setTextColor(WHITE);
+  __display->setCursor(0,17);
+
+  //info. msg.
+  __display->println(msg);
+
+  //footer
+  __display->drawFastHLine(0, 60, 128, WHITE);
+  __display->drawFastHLine(0, 63, 128, WHITE);
+
+  //splash!
+  __display->display();
+}
+
 void __oled_userscreen() {
 
   //clear oled screen

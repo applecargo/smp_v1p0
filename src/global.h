@@ -12,8 +12,10 @@
 #define SMP_RECORDING 0x01
 #define SMP_PLAYING 0x02
 #define SMP_LISTING 0x03
-#define SMP_DELETE_ASK 0x04
-#define SMP_DELETE_CONFIRM 0x05
+#define SMP_SCANNING 0x04
+#define SMP_DELETE_ASK 0x05
+#define SMP_DELETE_CONFIRM 0x06
+#define SMP_INFOMSG 0x07
 extern int __mode;
 // developer's mode toggle
 #define SMP_DEV_OFF 0x10
@@ -40,6 +42,7 @@ extern Adafruit_SSD1306 * __display;
 extern void __oled_setup();
 extern void __oled_devscreen();
 extern void __oled_userscreen();
+extern void __oled_userscreen_infomsg(String msg);
 extern void __oled_userscreen_recording_start();
 extern void __oled_userscreen_browse(int file_idx, String file_selected);
 
