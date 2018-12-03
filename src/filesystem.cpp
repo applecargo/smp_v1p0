@@ -3,6 +3,7 @@
 //sd filesystem
 #include <SdFat.h>
 static SdFatSdioEX sdEx;
+int __fs_nfiles = 0;
 
 void __filesystem_setup() {
   // Initialize the SD card
@@ -11,10 +12,12 @@ void __filesystem_setup() {
   }
   // make sdEx the current volume.
   sdEx.chvol();
+  //
+  __filesystem_update_nfiles();
 }
 
 //update n. of files @ root (excluding hidden folder & sub-directory entries!)
-int __filesystem_get_nfiles() {
+void __filesystem_update_nfiles() {
   int nfiles = 0;
   File file, dirFile;
   if (!dirFile.open("/", O_READ)) {
@@ -26,20 +29,25 @@ int __filesystem_get_nfiles() {
     }
     file.close();
   }
-  return nfiles;
+  dirFile.close();
+  __fs_nfiles = nfiles;
 }
 
 //getting nth file in a root directory (excluding hidden folder & sub-directory entries!)
 String __filesystem_get_nth_filename(int n) {
   //
   File file, dirFile;
-  int nfiles = __filesystem_get_nfiles();
+  // __filesystem_update_nfiles();
+  // NOTE: we assume that this is up-to-date already.
+  //   --> so, every entities that have effects on '__fs_nfiles'.
+  //   --> (those who create/delete files)
+  //   --> should be responsible to run it by themselves at right time!
 
-  //parameter n must be in the range of (1 ~ 'nfiles')
-  if (n < 1 || n > nfiles) return ""; //error
+  //parameter n must be in the range of (1 ~ '__fs_nfiles')
+  if (n < 1 || n > __fs_nfiles) return ""; //error
 
   //reversed order.
-  n = nfiles - n + 1; // again, '1 < n < nfiles'
+  n = __fs_nfiles - n + 1; // again, '1 < n < __fs_nfiles'
 
   // open root('/')
   if (!dirFile.open("/", O_READ)) {

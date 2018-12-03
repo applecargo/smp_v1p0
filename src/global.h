@@ -8,7 +8,7 @@
 
 //main
 // operating modes
-#define SMP_STOPPED 0x00
+#define SMP_IDLE 0x00
 #define SMP_RECORDING 0x01
 #define SMP_PLAYING 0x02
 #define SMP_LISTING 0x03
@@ -28,19 +28,20 @@ extern Bounce __buttonStop;
 extern Bounce __buttonPlay;
 extern Bounce __buttonWhlClk;
 extern void __io_setup();
-extern void __io_button_read();
-extern long __io_enc_read();
-extern void __io_enc_write(long val);
-extern void __io_enc_setzero();
+extern void __io_buttons_update();
+#define ENC_NOEVENT 0x50
+#define ENC_TURN_LEFT 0x51
+#define ENC_TURN_RIGHT 0x52
+extern int __io_enc_event;
+extern void __io_enc_event_update();
 
 //oled
 extern Adafruit_SSD1306 * __display;
 extern void __oled_setup();
-extern void __oled_loop();
-extern void __oled_userscreen();
 extern void __oled_devscreen();
-extern void __oled_userscreen_browse();
+extern void __oled_userscreen();
 extern void __oled_userscreen_recording_start();
+extern void __oled_userscreen_browse(int file_idx, String file_selected);
 
 //audio
 extern unsigned int __sdwr_time;
@@ -57,7 +58,8 @@ extern void __audio_adjust_mic_level();
 extern void __filesystem_setup();
 extern void __filesystem_errorHalt(const char* msg);
 extern String __filesystem_open_file_for_recording(File * file);
-extern int __filesystem_get_nfiles();
+extern int __fs_nfiles;
+extern void __filesystem_update_nfiles();
 extern String __filesystem_get_nth_filename(int n);
 
 //gps

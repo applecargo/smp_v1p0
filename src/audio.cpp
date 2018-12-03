@@ -68,6 +68,9 @@ String __audio_start_recording() {
     //
     Serial.println("file open(creation) success!");
 
+    //update __fs_nfiles, immediately.
+    __filesystem_update_nfiles();
+
     //rec. start
     queue1.begin();
 
@@ -148,6 +151,9 @@ void __audio_stop_recording() {
 
   //close the file
   frec.close();
+
+  //update __fs_nfiles, immediately. (redundantly)
+  __filesystem_update_nfiles();
 }
 
 void __audio_adjust_mic_level() {

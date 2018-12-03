@@ -10,6 +10,7 @@ Bounce __buttonWhlClk = Bounce(25, 8);
 //encoder
 #include <Encoder.h>
 static Encoder enc(26, 24);
+int __io_enc_event = ENC_NOEVENT;
 
 void __io_setup() {
   //
@@ -19,21 +20,18 @@ void __io_setup() {
   pinMode(25, INPUT_PULLUP);
 }
 
-void __io_button_read() {
+void __io_buttons_update() {
   __buttonRecord.update();
   __buttonStop.update();
   __buttonPlay.update();
   __buttonWhlClk.update();
 }
 
-long __io_enc_read() {
-  return enc.read();
-}
-
-void __io_enc_write(long val) {
-  enc.write(val);
-}
-
-void __io_enc_setzero() {
-  __io_enc_write(0);
+void __io_enc_event_update() {
+  static long oldPos = 0;
+  long newPos = enc.read();
+  if (newPos > oldPos) __io_enc_event = ENC_TURN_RIGHT;
+  else if (newPos < oldPos) __io_enc_event = ENC_TURN_LEFT;
+  else __io_enc_event = ENC_NOEVENT;
+  oldPos = newPos;
 }

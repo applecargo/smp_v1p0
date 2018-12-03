@@ -61,8 +61,8 @@ static void __oled_fixmarker() {
 //operating modes
 static void __oled_mode() {
   switch (__mode) {
-  case SMP_STOPPED:
-    __display->println("stopped.");
+  case SMP_IDLE:
+    __display->println("SMP v1.0");
     break;
   case SMP_RECORDING:
     __display->println("recording.");
@@ -73,6 +73,69 @@ static void __oled_mode() {
   default:
     ;
   }
+}
+
+void __oled_devscreen() {
+
+  //clear oled screen
+  __display->clearDisplay();
+
+  //
+  __oled_fixmarker();
+
+  //
+  __display->setFont();
+  __display->setTextSize(1);
+  __display->setTextColor(WHITE);
+  __display->setCursor(0,0);
+
+  //line #1 : loop time of loop()
+  __display->print("loop : ");
+  __display->print(__looptime/1000000.0, 6);
+  __looptime = 0;
+  __display->println(" sec.");
+
+  //line #2 : date
+  __display->print(year(__local));
+  __display->print("-");
+  if(month(__local) < 10) __display->print('0');
+  __display->print(month(__local));
+  __display->print("-");
+  if(day(__local) < 10) __display->print('0');
+  __display->print(day(__local));
+  __display->print(" ");
+  if(hour(__local) < 10) __display->print('0');
+  __display->print(hour(__local));
+  __display->print(".");
+  if(minute(__local) < 10) __display->print('0');
+  __display->print(minute(__local));
+  __display->print(".");
+  if(second(__local) < 10) __display->print('0');
+  __display->println(second(__local));
+
+  //line #3 : latitude
+  __display->print(" ");
+  __display->print(__latitude, 4);
+  __display->println(__lat);
+
+  //line #4 : longitude
+  __display->print(" ");
+  __display->print(__longitude, 4);
+  __display->println(__lon);
+
+  //line #5 : n. of satellites
+  __display->print(" n of satellites: ");
+  __display->println(__nsat);
+
+  //line #6 : sd flash write time
+  __display->print("sdwr > 1e5 : ");
+  __display->println(__sdwr_time);
+
+  //line #7 : operation mode
+  __oled_mode();
+
+  //splash!
+  __display->display();
 }
 
 void __oled_userscreen() {
@@ -171,7 +234,7 @@ void __oled_userscreen_recording_start() {
   __display->display();
 }
 
-void __oled_userscreen_browse() {
+void __oled_userscreen_browse(int file_idx, String file_selected) {
 
   //clear oled screen
   __display->clearDisplay();
@@ -186,84 +249,16 @@ void __oled_userscreen_browse() {
   // __display->setCursor(38,12);
   __display->setCursor(0,12);
 
-  //
-  String filename = __filesystem_get_nth_filename(__io_enc_read());
-  int nfiles = __filesystem_get_nfiles();
-  Serial.println(filename);
-
   //line #1 : time
-  __display->println(filename.substring(0, 8));
+  __display->println(file_selected.substring(0, 8));
 
   //line #2 : date
-  __display->println(filename.substring(9, 19));
+  __display->println(file_selected.substring(9, 19));
 
   //line #3 : index/nindex
-  __display->print(__io_enc_read());
+  __display->print(file_idx);
   __display->print("/");
-  __display->println(nfiles);
-
-  //splash!
-  __display->display();
-}
-
-void __oled_devscreen() {
-
-  //clear oled screen
-  __display->clearDisplay();
-
-  //
-  __oled_fixmarker();
-
-  //
-  __display->setFont();
-  __display->setTextSize(1);
-  __display->setTextColor(WHITE);
-  __display->setCursor(0,0);
-
-  //line #1 : loop time of loop()
-  __display->print("loop : ");
-  __display->print(__looptime/1000000.0, 6);
-  __looptime = 0;
-  __display->println(" sec.");
-
-  //line #2 : date
-  __display->print(year(__local));
-  __display->print("-");
-  if(month(__local) < 10) __display->print('0');
-  __display->print(month(__local));
-  __display->print("-");
-  if(day(__local) < 10) __display->print('0');
-  __display->print(day(__local));
-  __display->print(" ");
-  if(hour(__local) < 10) __display->print('0');
-  __display->print(hour(__local));
-  __display->print(".");
-  if(minute(__local) < 10) __display->print('0');
-  __display->print(minute(__local));
-  __display->print(".");
-  if(second(__local) < 10) __display->print('0');
-  __display->println(second(__local));
-
-  //line #3 : latitude
-  __display->print(" ");
-  __display->print(__latitude, 4);
-  __display->println(__lat);
-
-  //line #4 : longitude
-  __display->print(" ");
-  __display->print(__longitude, 4);
-  __display->println(__lon);
-
-  //line #5 : n. of satellites
-  __display->print(" n of satellites: ");
-  __display->println(__nsat);
-
-  //line #6 : sd flash write time
-  __display->print("sdwr > 1e5 : ");
-  __display->println(__sdwr_time);
-
-  //line #7 : operation mode
-  __oled_mode();
+  __display->println(__fs_nfiles);
 
   //splash!
   __display->display();
