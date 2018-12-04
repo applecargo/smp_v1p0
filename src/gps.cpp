@@ -53,6 +53,18 @@ void __gps_setup() {
   //  --> using interrupt-driven way of Serial1 processing is being recommanded.
   //  --> researching into Adafruit GPS codebase might give a hint.
   //  --> but, for now, i have no idea. let's move on, skipping this.
+
+  //EDIT: adafruit gps library also has this 5 sec delay.
+  //  --> so, it is not a prob. of library. the GPS time itself is 5 sec off?
+  //  --> they say it is non-sense. such delay for GPS to calculate position.
+  //  --> but then this could be a comm. delay from when the position calculated and then transmitted. ?
+
+  //EDIT: WOW.
+  //  --> my android phone has time mismatch to the atomic time!
+  //  --> iphone time is well match to the device's GPS synced time!
+  //  --> http://leapsecond.com/java/gpsclock.htm
+  //  --> https://www.zdnet.com/article/the-time-displayed-on-most-android-phones-is-wrong/
+  //  --> https://android.gadgethacks.com/how-to/set-your-android-atomic-time-for-perfectly-synced-clock-0170500/
 }
 
 void __time_location_update() {
