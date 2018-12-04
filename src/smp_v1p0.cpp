@@ -100,7 +100,7 @@ void loop() {
     //on 'encoder events'
     if (__io_enc_event != ENC_NOEVENT) {
       //if there is no file, then disable SMP_LISTING mode.
-      if (__fs_nfiles < 1) {
+      if (__fs_nfiles == 0) {
         __oled_userscreen_infomsg("No files! \nPlease make at least 1 file by recording.");
         __mode_return = SMP_IDLE;
         __mode = SMP_INFOMSG;
@@ -268,16 +268,12 @@ void loop() {
     ;
   }
 
-//
-  if (__mode != __mode_prev) {
-    Serial.println(__mode);
-  }
-
-//
-  __mode_prev = __mode;
-
-// automatic gain control for mic.
+  // automatic gain control for mic.
   if (__mode == SMP_RECORDING) {
     __audio_adjust_mic_level();
   }
+
+  //DEBUG: mode transition event monitoring.
+  if (__mode != __mode_prev) Serial.println(__mode);
+  __mode_prev = __mode;
 }

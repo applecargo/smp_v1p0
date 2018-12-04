@@ -75,6 +75,11 @@ extern float __latitude;
 extern char __lat;
 extern int __nsat;
 extern bool __gotfix;
+extern unsigned long fix_age_datetime; //ms
+extern unsigned long fix_age_position; //ms
+extern float __course;
+extern float __speed;
+extern String __cardinal;
 
 //rtc
 extern void __rtc_setup();

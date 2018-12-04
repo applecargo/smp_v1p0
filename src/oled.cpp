@@ -39,8 +39,6 @@ void __oled_setup() {
 static void __oled_fixmarker() {
   static const float fixage_max = 200; // 'on' time
   static float fixage = fixage_max;
-  static int count = 0;
-  count++;
 
   if (__gotfix == true) {
     __gotfix = false;
@@ -54,6 +52,17 @@ static void __oled_fixmarker() {
   if (fixage > 0) {
     __display->drawCircle(122, 6, 4, WHITE);
     __display->drawCircle(122, 6, 2, WHITE);
+
+    //smallest font
+    __display->setFont();
+    __display->setTextSize(1);
+    __display->setTextColor(WHITE);
+    __display->setCursor(110 + (3 - __cardinal.length()) * 6, 17);
+
+    //
+    if (__speed > 3) { // display cardinal when speed > 3 kmph
+      __display->println(__cardinal);
+    }
   }
 }
 
@@ -115,24 +124,38 @@ void __oled_devscreen() {
 
   //line #3 : latitude
   __display->print(" ");
-  __display->print(__latitude, 4);
+  __display->print(__latitude, 6);
   __display->println(__lat);
 
   //line #4 : longitude
   __display->print(" ");
-  __display->print(__longitude, 4);
+  __display->print(__longitude, 6);
   __display->println(__lon);
 
   //line #5 : n. of satellites
   __display->print(" n of satellites: ");
   __display->println(__nsat);
 
-  //line #6 : sd flash write time
-  __display->print("sdwr > 1e5 : ");
-  __display->println(__sdwr_time);
+  // //line #6 : sd flash write time
+  // __display->print("sdwr > 1e5 : ");
+  // __display->println(__sdwr_time);
+  //
+  // //line #7 : operation mode
+  // __oled_mode();
 
-  //line #7 : operation mode
-  __oled_mode();
+  __display->print("speed: ");
+  __display->println(__speed);
+
+  __display->print("course: ");
+  __display->print(__course);
+  __display->print("(");
+  __display->print(__cardinal);
+  __display->println(")");
+
+  __display->print("fa(t,p): ");
+  __display->print(fix_age_datetime);
+  __display->print(", ");
+  __display->println(fix_age_position);
 
   //splash!
   __display->display();
