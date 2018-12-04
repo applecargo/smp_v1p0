@@ -5,6 +5,7 @@
 #include <Adafruit_SSD1306.h>
 #include <TimeLib.h>
 #include <SdFat.h>
+#define PI 3.1415926535897932384626433832795
 
 //main
 // operating modes
@@ -83,6 +84,7 @@ extern unsigned long fix_age_position; //ms
 extern float __course;
 extern float __speed;
 extern String __cardinal;
+extern float __gps_get_course_to(float lat1, float long1, float lat2, float long2);
 
 //rtc
 extern void __rtc_setup();

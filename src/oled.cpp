@@ -124,6 +124,32 @@ static void __oled_time(int hour, int minute, int second) {
 
 }
 
+static void __oled_direction_marker(String file_selected) {
+
+  //parse 'filename'
+  filenameEntry entry;
+  entry.parse(file_selected.c_str());
+
+  if (entry.latitude == 0) {
+    float c_x = 110;
+    float c_y = 35;
+    __display->drawCircle(c_x, c_y, 15, WHITE);
+    // __display->drawCircle(c_x, c_y, 7, WHITE);
+    __display->drawCircle(c_x, c_y, 2, WHITE);
+  } else {
+    float course = __gps_get_course_to(__latitude, __longitude, entry.latitude, entry.longitude);
+    // Serial.println(course);
+    float c_x = 110;
+    float c_y = 35;
+    float d_r = 15;
+    float d_x = d_r * cos(course / 180 * PI - PI/2);
+    float d_y = d_r * sin(course / 180 * PI - PI/2);
+    __display->drawCircle(c_x, c_y, 15, WHITE);
+    __display->fillCircle(c_x, c_y, 2, WHITE);
+    __display->drawLine(c_x, c_y, c_x + d_x, c_y + d_y, WHITE);
+  }
+}
+
 void __oled_devscreen() {
 
   //clear oled screen
@@ -307,32 +333,14 @@ void __oled_userscreen_browse(int file_idx, String file_selected) {
   __display->println(file_selected.substring(0, 19));
   //NOTE: --> you should be careful not to 'substring' on 'empty string.' -> it hangs!!
 
-  // //TEST
-  // filenameEntry entry;
-  // entry.parse(file_selected.c_str());
-  // Serial.println(entry.year);
-  // Serial.println(entry.month);
-  // Serial.println(entry.day);
-  // Serial.println(entry.hour);
-  // Serial.println(entry.minute);
-  // Serial.println(entry.second);
-  // Serial.println(entry.latitude, 6);
-  // Serial.println(entry.lat);
-  // Serial.println(entry.longitude, 6);
-  // Serial.println(entry.lon);
-  // Serial.println();
-
   //line #2 : index/nindex
+  __display->setCursor(0, 50);
   __display->print(file_idx);
   __display->print("/");
   __display->println(__fs_nfiles);
 
-  //small font
-  __display->setFont();
-  __display->setTextSize(1);
-
-  //line #3 : 'location'
-  __display->println(file_selected.substring(20, (file_selected.length() - 4)));
+  //direction marker
+  __oled_direction_marker(file_selected);
 
   //splash!
   __display->display();
