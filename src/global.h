@@ -85,6 +85,7 @@ extern float __course;
 extern float __speed;
 extern String __cardinal;
 extern float __gps_get_course_to(float lat1, float long1, float lat2, float long2);
+extern float __gps_get_distance_between(float lat1, float long1, float lat2, float long2);
 
 //rtc
 extern void __rtc_setup();

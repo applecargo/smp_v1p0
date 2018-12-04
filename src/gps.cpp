@@ -196,6 +196,23 @@ float __gps_get_course_to(float lat1, float long1, float lat2, float long2)
   return gps.course_to(lat1, long1, lat2, long2);
 }
 
+float __gps_get_distance_between(float lat1, float long1, float lat2, float long2)
+{
+  float value;
+
+  if (lat2 > 1000) {
+    value = lat2;
+    lat2 = (value-100*int(value/100))/60.0;
+    lat2 += int(value/100);
+  }
+  if (long2 > 1000) {
+    value = long2;
+    long2 = (value-100*int(value/100))/60.0;
+    long2 += int(value/100);
+  }
+  return gps.distance_between(lat1, long1, lat2, long2);
+}
+
 //(interpreteing fix_age to some meanings..)
 // if (fix_age == TinyGPS::GPS_INVALID_AGE)
 //   Serial.println("No fix detected");
