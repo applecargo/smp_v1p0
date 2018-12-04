@@ -38,19 +38,15 @@ void __oled_setup() {
 //(private)
 //draw a marker for each fix. : sort of 'periodic blinking' effect.
 static void __oled_fixmarker() {
-  static const float fixage_max = 200; // 'on' time
-  static float fixage = fixage_max;
+  static const unsigned long timeout = 500; // 'on' time : 0.5sec.
+  static elapsedMillis msec = 0;
 
   if (__gotfix == true) {
     __gotfix = false;
-    fixage = fixage_max;
+    msec = 0;
   }
 
-  if(fixage > 0) {
-    fixage = fixage - 1;
-  }
-
-  if (fixage > 0) {
+  if (msec < timeout) {
     __display->drawCircle(122, 6, 4, WHITE);
     __display->drawCircle(122, 6, 2, WHITE);
 
@@ -85,6 +81,49 @@ static void __oled_mode() {
   }
 }
 
+static void __oled_date(int year, int month, int day) {
+
+  //'year'
+  __display->print(year);
+
+  //'-'
+  __display->print("-");
+
+  //'month'
+  if(month < 10) __display->print('0');
+  __display->print(month);
+
+  //'-'
+  __display->print("-");
+
+  //'day'
+  if(day < 10) __display->print('0');
+  __display->print(day);
+
+}
+
+static void __oled_time(int hour, int minute, int second) {
+
+  //'hour'
+  if(hour < 10) __display->print('0');
+  __display->print(hour);
+
+  //'.'
+  __display->print(".");
+
+  //'minute'
+  if(minute < 10) __display->print('0');
+  __display->print(minute);
+
+  //'.'
+  __display->print(".");
+
+  //'second'
+  if(second < 10) __display->print('0');
+  __display->print(second);
+
+}
+
 void __oled_devscreen() {
 
   //clear oled screen
@@ -105,23 +144,11 @@ void __oled_devscreen() {
   __looptime = 0;
   __display->println(" sec.");
 
-  //line #2 : date
-  __display->print(year(__local));
-  __display->print("-");
-  if(month(__local) < 10) __display->print('0');
-  __display->print(month(__local));
-  __display->print("-");
-  if(day(__local) < 10) __display->print('0');
-  __display->print(day(__local));
+  //line #2 : date & time
+  __oled_date(year(__local), month(__local), day(__local));
   __display->print(" ");
-  if(hour(__local) < 10) __display->print('0');
-  __display->print(hour(__local));
-  __display->print(".");
-  if(minute(__local) < 10) __display->print('0');
-  __display->print(minute(__local));
-  __display->print(".");
-  if(second(__local) < 10) __display->print('0');
-  __display->println(second(__local));
+  __oled_time(hour(__local), minute(__local), second(__local));
+  __display->println();
 
   //line #3 : latitude
   __display->print(" ");
@@ -204,13 +231,8 @@ void __oled_userscreen() {
   __display->setCursor(0,12);
 
   //
-  __display->print(year(__local));
-  __display->print("-");
-  if(month(__local) < 10) __display->print('0');
-  __display->print(month(__local));
-  __display->print("-");
-  if(day(__local) < 10) __display->print('0');
-  __display->println(day(__local));
+  __oled_date(year(__local), month(__local), day(__local));
+  __display->println();
 
   //line #2 : time (big font)
   __display->setFont(&LiberationSans_Regular9pt7b);
@@ -221,14 +243,8 @@ void __oled_userscreen() {
 
   //
   // __display->print(" ");
-  if(hour(__local) < 10) __display->print('0');
-  __display->print(hour(__local));
-  __display->print(".");
-  if(minute(__local) < 10) __display->print('0');
-  __display->print(minute(__local));
-  __display->print(".");
-  if(second(__local) < 10) __display->print('0');
-  __display->println(second(__local));
+  __oled_time(hour(__local), minute(__local), second(__local));
+  __display->println();
 
   //line #3 : operation mode (big font)
   __oled_mode();
@@ -263,22 +279,10 @@ void __oled_userscreen_recording_start() {
   __display->setCursor(6,50);
 
   //
-  __display->print(year(__local));
-  __display->print("-");
-  if(month(__local) < 10) __display->print('0');
-  __display->print(month(__local));
-  __display->print("-");
-  if(day(__local) < 10) __display->print('0');
-  __display->print(day(__local));
+  __oled_date(year(__local), month(__local), day(__local));
   __display->print(" ");
-  if(hour(__local) < 10) __display->print('0');
-  __display->print(hour(__local));
-  __display->print(".");
-  if(minute(__local) < 10) __display->print('0');
-  __display->print(minute(__local));
-  __display->print(".");
-  if(second(__local) < 10) __display->print('0');
-  __display->println(second(__local));
+  __oled_time(hour(__local), minute(__local), second(__local));
+  __display->println();
 
   //splash!
   __display->display();
@@ -301,6 +305,22 @@ void __oled_userscreen_browse(int file_idx, String file_selected) {
 
   //line #1 : 'date time'
   __display->println(file_selected.substring(0, 19));
+  //NOTE: --> you should be careful not to 'substring' on 'empty string.' -> it hangs!!
+
+  // //TEST
+  // filenameEntry entry;
+  // entry.parse(file_selected.c_str());
+  // Serial.println(entry.year);
+  // Serial.println(entry.month);
+  // Serial.println(entry.day);
+  // Serial.println(entry.hour);
+  // Serial.println(entry.minute);
+  // Serial.println(entry.second);
+  // Serial.println(entry.latitude, 6);
+  // Serial.println(entry.lat);
+  // Serial.println(entry.longitude, 6);
+  // Serial.println(entry.lon);
+  // Serial.println();
 
   //line #2 : index/nindex
   __display->print(file_idx);

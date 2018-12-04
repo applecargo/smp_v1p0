@@ -57,6 +57,9 @@ extern bool __audio_is_playing();
 extern void __audio_stop_playing();
 extern void __audio_adjust_mic_level();
 
+//filename
+#include "filename.h"
+
 //filesystem
 extern void __filesystem_setup();
 extern void __filesystem_errorHalt(const char* msg);

@@ -99,67 +99,21 @@ String __filesystem_open_file_for_recording(File * file) {
   //      maybe using utc for filename could make better sense.. cause that wouldn't suffer DST event.
   //      but then, it means we need to post-process more.. so that's TBD.
 
-  // we start with a new 'empty string'
-  String filenameNowHere = "";
+  filenameEntry entry;
+  entry.year = year(__local);
+  entry.month = month(__local);
+  entry.day = day(__local);
+  entry.hour = hour(__local);
+  entry.minute = minute(__local);
+  entry.second = second(__local);
+  entry.latitude = __latitude;
+  entry.lat = __lat;
+  entry.longitude = __longitude;
+  entry.lon = __lon;
+  String filenameNowHere = String(entry.pack());
 
-  // 'year'
-  filenameNowHere += year(__local);
-
-  // -
-  filenameNowHere += "-";
-
-  // 'month'
-  if(month(__local) < 10) filenameNowHere += '0';
-  filenameNowHere += month(__local);
-
-  // -
-  filenameNowHere += "-";
-
-  // 'day'
-  if(day(__local) < 10) filenameNowHere += '0';
-  filenameNowHere += day(__local);
-
-  // (space)
-  filenameNowHere += " ";
-
-  // 'hour'
-  if(hour(__local) < 10) filenameNowHere += '0';
-  filenameNowHere += hour(__local);
-
-  // .
-  filenameNowHere += ".";
-
-  // 'minute'
-  if(minute(__local) < 10) filenameNowHere += '0';
-  filenameNowHere += minute(__local);
-
-  // .
-  filenameNowHere += ".";
-
-  // 'second'
-  if(second(__local) < 10) filenameNowHere += '0';
-  filenameNowHere += second(__local);
-
-  // @
-  filenameNowHere += " @ ";
-
-  // 'latitude'
-  filenameNowHere += String(__latitude, 6);
-
-  // 'lat' : direction 1 character.
-  filenameNowHere += __lat;
-
-  // (space)
-  filenameNowHere += " ";
-
-  // 'longitude'
-  filenameNowHere += String(__longitude, 6);
-
-  // 'lon' : direction 1 character.
-  filenameNowHere += __lon;
-
-  // '.RAW'
-  filenameNowHere += ".RAW";
+  // //TEST
+  // Serial.println(filenameNowHere.length()); // this tells us 'at least longer than 45 characters'.
 
   //DEBUG: filename constructed.
   Serial.print("filenameNowHere : ");
