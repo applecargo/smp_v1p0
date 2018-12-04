@@ -14,6 +14,7 @@ Adafruit_SSD1306 * __display;
 
 //fonts
 #include <Fonts/LiberationSans_Regular5pt7b.h> // (almost) same as 'Arial'
+#include <Fonts/LiberationSans_Regular6pt7b.h> // (almost) same as 'Arial'
 #include <Fonts/LiberationSans_Regular7pt7b.h> // (almost) same as 'Arial'
 #include <Fonts/LiberationSans_Regular9pt7b.h> // (almost) same as 'Arial'
 
@@ -292,22 +293,26 @@ void __oled_userscreen_browse(int file_idx, String file_selected) {
   __oled_fixmarker();
 
   //small font
-  __display->setFont(&LiberationSans_Regular7pt7b);
+  __display->setFont(&LiberationSans_Regular6pt7b);
   __display->setTextSize(1);
   __display->setTextColor(WHITE);
   // __display->setCursor(38,12);
   __display->setCursor(0,12);
 
-  //line #1 : time
-  __display->println(file_selected.substring(0, 8));
+  //line #1 : 'date time'
+  __display->println(file_selected.substring(0, 19));
 
-  //line #2 : date
-  __display->println(file_selected.substring(9, 19));
-
-  //line #3 : index/nindex
+  //line #2 : index/nindex
   __display->print(file_idx);
   __display->print("/");
   __display->println(__fs_nfiles);
+
+  //small font
+  __display->setFont();
+  __display->setTextSize(1);
+
+  //line #3 : 'location'
+  __display->println(file_selected.substring(20, (file_selected.length() - 4)));
 
   //splash!
   __display->display();

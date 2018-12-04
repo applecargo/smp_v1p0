@@ -102,6 +102,26 @@ String __filesystem_open_file_for_recording(File * file) {
   // we start with a new 'empty string'
   String filenameNowHere = "";
 
+  // 'year'
+  filenameNowHere += year(__local);
+
+  // -
+  filenameNowHere += "-";
+
+  // 'month'
+  if(month(__local) < 10) filenameNowHere += '0';
+  filenameNowHere += month(__local);
+
+  // -
+  filenameNowHere += "-";
+
+  // 'day'
+  if(day(__local) < 10) filenameNowHere += '0';
+  filenameNowHere += day(__local);
+
+  // (space)
+  filenameNowHere += " ";
+
   // 'hour'
   if(hour(__local) < 10) filenameNowHere += '0';
   filenameNowHere += hour(__local);
@@ -119,26 +139,6 @@ String __filesystem_open_file_for_recording(File * file) {
   // 'second'
   if(second(__local) < 10) filenameNowHere += '0';
   filenameNowHere += second(__local);
-
-  // (space)
-  filenameNowHere += " ";
-
-  // 'day'
-  if(day(__local) < 10) filenameNowHere += '0';
-  filenameNowHere += day(__local);
-
-  // -
-  filenameNowHere += "-";
-
-  // 'month'
-  if(month(__local) < 10) filenameNowHere += '0';
-  filenameNowHere += month(__local);
-
-  // -
-  filenameNowHere += "-";
-
-  // 'year'
-  filenameNowHere += year(__local);
 
   // @
   filenameNowHere += " @ ";
