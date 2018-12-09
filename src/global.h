@@ -46,6 +46,7 @@ extern void __oled_userscreen();
 extern void __oled_userscreen_infomsg(String msg);
 extern void __oled_userscreen_recording_start();
 extern void __oled_userscreen_browse(int file_idx, String file_selected);
+extern void __oled_nmea_strings();
 
 //audio
 extern unsigned int __sdwr_time;
@@ -57,6 +58,7 @@ extern bool __audio_start_playing(String filetoplay);
 extern bool __audio_is_playing();
 extern void __audio_stop_playing();
 extern void __audio_adjust_mic_level();
+extern void __audio_volume_update();
 
 //filename
 #include "filename.h"
@@ -86,6 +88,10 @@ extern float __speed;
 extern String __cardinal;
 extern float __gps_get_course_to(float lat1, float long1, float lat2, float long2);
 extern float __gps_get_distance_between(float lat1, float long1, float lat2, float long2);
+#define GPS_NMEA_BUFF_LEN 8
+extern String __gps_lines[GPS_NMEA_BUFF_LEN];
+extern int __gps_line_pointer;
+extern bool __gps_is_nmea_collecting;
 
 //rtc
 extern void __rtc_setup();

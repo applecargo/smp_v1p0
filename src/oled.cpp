@@ -189,6 +189,23 @@ void __oled_devscreen() {
   __display->display();
 }
 
+void __oled_nmea_strings() {
+
+  //oled
+  __display->clearDisplay();
+  __display->setFont();
+  __display->setTextSize(1);
+  __display->setTextColor(WHITE);
+  __display->setCursor(0,0);
+  //8 ---> 1
+  for (int idx = 0; idx < GPS_NMEA_BUFF_LEN; idx++) {
+    //a scrolling effect?
+    __display->println(__gps_lines[(idx + __gps_line_pointer) % GPS_NMEA_BUFF_LEN]);
+  }
+  //splash!
+  __display->display();
+}
+
 void __oled_userscreen_infomsg(String msg) {
 
   //clear oled screen
@@ -219,6 +236,9 @@ void __oled_userscreen() {
 
   //clear oled screen
   __display->clearDisplay();
+
+  //frame
+  // __display->drawRect(0, 0, 128, 64, WHITE);
 
   //
   __oled_fixmarker();

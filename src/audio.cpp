@@ -48,6 +48,9 @@ void __audio_setup() {
 
   //
   Timer3.initialize(T3_INTERVAL_RECORDING);
+
+  //
+  pinMode(15, INPUT);
 }
 
 ////
@@ -185,4 +188,9 @@ bool __audio_is_playing() {
 void __audio_stop_playing() {
   Serial.println("stopPlaying");
   playRaw1.stop();
+}
+
+void __audio_volume_update() {
+  float vol = (1023 - analogRead(15)) / 1023.0;
+  sgtl5000_1.volume(vol);
 }

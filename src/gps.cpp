@@ -29,10 +29,56 @@ unsigned long fix_age_position; //ms
 //timer1
 #include <TimerOne.h>
 // NMEA string reader - 1ms timer interrupt
+// NMEA string collecter (DEBUG) - 1ms timer interrupt
+bool __gps_is_nmea_collecting = false;
+String __gps_lines[GPS_NMEA_BUFF_LEN] = {"", };
+int __gps_line_pointer = 0;
+//
 void readGPS(void) {
   //consume all characters in Serial1 buffer.
   while (Serial1.available()) {
-    gps.encode(Serial1.read());
+    //read 1 char.
+    char c = Serial1.read();
+    gps.encode(c);
+
+    //NMEA string collector
+    //keep tracking a single line
+    static const int letters_max = 21;
+    static char line_buf[letters_max] = "";
+    static int letter_pointer = 0;
+    static bool __gps_is_nmea_collecting_prev = false;
+    if (__gps_is_nmea_collecting_prev != __gps_is_nmea_collecting && __gps_is_nmea_collecting == true) {
+      //clear the 'line' buffer.
+      strcpy(line_buf, "");
+      //and start from first letter.
+      letter_pointer = 0;
+    }
+    if (__gps_is_nmea_collecting) {
+      //'is line completed?'
+      if (c == '\n') {
+        //we've got a 'full' line!
+        //push this line to the 'lines' buffer
+        //additional 'selector'
+        // if (String(line_buf).substring(0, 6) == "$GPGGA") {
+        __gps_lines[__gps_line_pointer] = String(line_buf);
+        __gps_line_pointer++;
+        if (__gps_line_pointer >= GPS_NMEA_BUFF_LEN) {
+          __gps_line_pointer = 0;
+        }
+        // }
+        //clear the 'line' buffer.
+        strcpy(line_buf, "");
+        //and start from first letter.
+        letter_pointer = 0;
+      } else {
+        //collect more...
+        if (letter_pointer < letters_max) { //a truncation effect.
+          line_buf[letter_pointer] = c;
+        }
+        letter_pointer++;
+      }
+    }
+    __gps_is_nmea_collecting_prev = __gps_is_nmea_collecting;
   }
 }
 

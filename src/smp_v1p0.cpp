@@ -9,6 +9,7 @@ int __mode_return = SMP_IDLE;
 int __mode_prev = SMP_IDLE;
 
 //developer mode
+// int __devmode = SMP_DEV_ON;
 int __devmode = SMP_DEV_OFF;
 
 //profiling of loop()
@@ -58,7 +59,18 @@ void loop() {
     break;
   case SMP_IDLE:
     //screen
-    if (__devmode == SMP_DEV_ON) __oled_devscreen();
+    if (__devmode == SMP_DEV_ON) {
+      static bool nmea_monitoring = false;
+      if (nmea_monitoring == false) {
+        __oled_devscreen();
+      } else {
+        __oled_nmea_strings();
+      }
+      if (__buttonStop.fallingEdge()) {
+        nmea_monitoring = !nmea_monitoring;
+        __gps_is_nmea_collecting = nmea_monitoring;
+      }
+    }
     else __oled_userscreen();
     //on 'record'
     if (__buttonRecord.fallingEdge()) {
@@ -271,6 +283,11 @@ void loop() {
   // automatic gain control for mic.
   if (__mode == SMP_RECORDING) {
     __audio_adjust_mic_level();
+  }
+
+  // volume knob
+  if (__mode != SMP_RECORDING) {
+    __audio_volume_update();
   }
 
   //DEBUG: mode transition event monitoring.
