@@ -35,3 +35,26 @@ void __io_enc_event_update() {
   else __io_enc_event = ENC_NOEVENT;
   oldPos = newPos;
 }
+
+void __io_enc_event_update_alt() {
+  static elapsedMillis msec = 0;
+  static long oldPos = 0;
+  if (msec > 50) {
+    long newPos = enc.read();
+    if (newPos > (oldPos + 2.5)) {
+      __io_enc_event = ENC_TURN_RIGHT;
+      oldPos = newPos;
+    }
+    else if (newPos < (oldPos - 2.5)) {
+      __io_enc_event = ENC_TURN_LEFT;
+      oldPos = newPos;
+    }
+    else {
+      __io_enc_event = ENC_NOEVENT;
+    }
+    //
+    msec = 0;
+  } else if (__io_enc_event != ENC_NOEVENT) {
+    __io_enc_event = ENC_NOEVENT;
+  }
+}
