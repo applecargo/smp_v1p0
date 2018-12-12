@@ -45,6 +45,7 @@ void __audio_setup() {
   sgtl5000_1.enable();
   sgtl5000_1.inputSelect(audioIn);
   sgtl5000_1.volume(0.5);
+  sgtl5000_1.micGain(40);
 
   //
   Timer3.initialize(T3_INTERVAL_RECORDING);
@@ -192,5 +193,6 @@ void __audio_stop_playing() {
 
 void __audio_volume_update() {
   float vol = (1023 - analogRead(15)) / 1023.0;
+  // float vol = analogRead(15) / 1023.0;
   sgtl5000_1.volume(vol);
 }
