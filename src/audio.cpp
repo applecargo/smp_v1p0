@@ -1,5 +1,11 @@
 #include "global.h"
 
+//mic. input gain parameter
+#define AUDIO_MIC_GAIN 40
+
+//to invert volume knob's direction uncomment following line.
+#define AUDIO_VOLUME_KNOB_INVERSION
+
 //audio
 #include <Audio.h>
 // GUItool: begin automatically generated code
@@ -45,7 +51,7 @@ void __audio_setup() {
   sgtl5000_1.enable();
   sgtl5000_1.inputSelect(audioIn);
   sgtl5000_1.volume(0.5);
-  sgtl5000_1.micGain(40);
+  sgtl5000_1.micGain(AUDIO_MIC_GAIN);
 
   //
   Timer3.initialize(T3_INTERVAL_RECORDING);
@@ -192,7 +198,10 @@ void __audio_stop_playing() {
 }
 
 void __audio_volume_update() {
+#ifdef AUDIO_VOLUME_KNOB_INVERSION
   float vol = (1023 - analogRead(15)) / 1023.0;
-  // float vol = analogRead(15) / 1023.0;
+#else
+  float vol = analogRead(15) / 1023.0;
+#endif
   sgtl5000_1.volume(vol);
 }

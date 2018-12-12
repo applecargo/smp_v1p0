@@ -41,8 +41,7 @@ void loop() {
   __time_location_update();
 
   //encoder events
-  // __io_enc_event_update();
-  __io_enc_event_update_alt();
+  __io_enc_event_update();
 
   //button i/o
   __io_buttons_update();

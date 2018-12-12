@@ -37,7 +37,6 @@ extern void __io_buttons_update();
 #define ENC_TURN_RIGHT 0x52
 extern int __io_enc_event;
 extern void __io_enc_event_update();
-extern void __io_enc_event_update_alt();
 
 //oled
 extern Adafruit_SSD1306 * __display;
