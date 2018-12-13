@@ -88,24 +88,6 @@ static void __oled_fixmarker() {
   }
 }
 
-//(private)
-//operating modes
-static void __oled_mode() {
-  switch (__mode) {
-  case SMP_IDLE:
-    __display->println("SMP v1.0");
-    break;
-  case SMP_RECORDING:
-    __display->println("recording.");
-    break;
-  case SMP_PLAYING:
-    __display->println("playing.");
-    break;
-  default:
-    ;
-  }
-}
-
 static void __oled_date(int year, int month, int day) {
 
   //'year'
@@ -192,9 +174,6 @@ void __oled_devscreen() {
   // //line #6 : sd flash write time
   // __display->print("sdwr > 1e5 : ");
   // __display->println(__sdwr_time);
-  //
-  // //line #7 : operation mode
-  // __oled_mode();
 
   __display->print("speed: ");
   __display->println(__speed);
@@ -291,22 +270,21 @@ void __oled_userscreen() {
   __oled_time(hour(__local), minute(__local), second(__local));
   __display->println();
 
-  // //line #3 : operation mode (big font)
-  // __oled_mode();
+  // //line #3 : device name/version
   __display->setFont(&LiberationSans_Regular5pt7b);
   __display->setTextSize(1);
   __display->setTextColor(WHITE);
   __display->setCursor(0,58);
   __display->print("SMP v1");
 
-  //line #3 : latitude
+  //line #3.1 : latitude
   __display->setFont(&LiberationSans_Regular5pt7b);
   __display->setTextSize(1);
   __display->setTextColor(WHITE);
   __display->setCursor(68,48);
   __display->printf("%08.4f %c\n", __latitude, __lat);
 
-  //line #4 : longitude
+  //line #4.1 : longitude
   __display->setFont(&LiberationSans_Regular5pt7b);
   __display->setTextSize(1);
   __display->setTextColor(WHITE);
@@ -397,6 +375,43 @@ static void __oled_distance_info(filenameEntry& entry) {
     __display->print(distance/1000, 2);
     __display->println(" km");
   }
+}
+
+void __oled_userscreen_play(String file_selected) {
+
+  //clear oled screen
+  __display->clearDisplay();
+
+  //parse 'filename'
+  filenameEntry entry;
+  entry.parse(file_selected.c_str());
+
+  // //
+  // __oled_fixmarker();
+
+  //small font
+  __display->setFont(&LiberationSans_Regular6pt7b);
+  __display->setTextSize(1);
+  __display->setTextColor(WHITE);
+  // __display->setCursor(38,12);
+  __display->setCursor(0,12);
+
+  //line #1 : 'date time'
+  __display->println(file_selected.substring(0, 19));
+  //NOTE: --> you should be careful not to 'substring' on 'empty string.' -> it hangs!!
+
+  //distance info
+  __oled_distance_info(entry);
+
+  //line #2 : index/nindex
+  __display->setCursor(0, 45);
+  __display->println(">>>");
+
+  //direction marker
+  __oled_direction_marker(entry);
+
+  //splash!
+  __display->display();
 }
 
 void __oled_userscreen_browse(int file_idx, String file_selected) {

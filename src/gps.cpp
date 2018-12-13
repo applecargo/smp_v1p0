@@ -11,16 +11,11 @@ static Timezone myTZ(mySTD, mySTD);    //KST doesn't have DST. (hence, same TCR,
 static TimeChangeRule *tcr;    //pointer to the time change rule, use to get TZ abbrev
 time_t __local;
 
-//location - for exhibition (Gwangju ACT)
-float __latitude = 35.1476611;
-char __lat = 'N';
-float __longitude = 126.9212695;
-char __lon = 'E';
-// //location
-// float __latitude = 0.0;
-// char __lat = 'X';
-// float __longitude = 0.0;
-// char __lon = 'Y';
+//location
+float __latitude = 0.0;
+char __lat = 'X';
+float __longitude = 0.0;
+char __lon = 'Y';
 float __course = 0;
 float __speed = 0;
 String __cardinal = "";
@@ -116,6 +111,14 @@ void __gps_setup() {
   //  --> http://leapsecond.com/java/gpsclock.htm
   //  --> https://www.zdnet.com/article/the-time-displayed-on-most-android-phones-is-wrong/
   //  --> https://android.gadgethacks.com/how-to/set-your-android-atomic-time-for-perfectly-synced-clock-0170500/
+
+  if (__exhibitmode != SMP_EXHIBIT_OFF) {
+    //default location - for exhibition (Gwangju ACT)
+    __latitude = 35.1476611;
+    __lat = 'N';
+    __longitude = 126.9212695;
+    __lon = 'E';
+  }
 }
 
 void __time_location_update() {

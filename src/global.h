@@ -22,6 +22,11 @@ extern int __mode;
 #define SMP_DEV_OFF 0x10
 #define SMP_DEV_ON 0x11
 extern int __devmode;
+// exhibition mode toggle
+#define SMP_EXHIBIT_OFF 0x20
+#define SMP_EXHIBIT_GPS_PRESET_REC_ENABLED 0x21
+#define SMP_EXHIBIT_GPS_PRESET_REC_DISABLED 0x22
+extern int __exhibitmode;
 // profiling of loop()
 extern elapsedMicros __looptime;
 
@@ -43,6 +48,7 @@ extern Adafruit_SSD1306 * __display;
 extern void __oled_setup();
 extern void __oled_devscreen();
 extern void __oled_userscreen();
+extern void __oled_userscreen_play(String file_selected);
 extern void __oled_userscreen_infomsg(String msg);
 extern void __oled_userscreen_recording_start();
 extern void __oled_userscreen_browse(int file_idx, String file_selected);

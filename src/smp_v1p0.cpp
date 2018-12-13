@@ -3,10 +3,16 @@
 //global
 #include "global.h"
 
+// exhibition mode options
+// #define SMP_EXHIBIT_OFF 0x20
+// #define SMP_EXHIBIT_GPS_PRESET_REC_ENABLED 0x21
+// #define SMP_EXHIBIT_GPS_PRESET_REC_DISABLED 0x22
+int __exhibitmode = SMP_EXHIBIT_GPS_PRESET_REC_DISABLED;
+
 //operating modes
 int __mode = SMP_IDLE;
-int __mode_return = SMP_IDLE;
 int __mode_prev = SMP_IDLE;
+int __mode_return = SMP_IDLE;
 
 //developer mode
 // int __devmode = SMP_DEV_ON;
@@ -35,7 +41,7 @@ void setup() {
 void loop() {
   //
   static String filetorec;
-  static String filetoplay;
+  static String filetoplay = __filesystem_get_nth_filename(1);
 
   //time, date, location
   __time_location_update();
@@ -47,13 +53,17 @@ void loop() {
   __io_buttons_update();
 
   //mode transitions
-  static int list_file_idx = 0;
+  static int list_file_idx = 1;
   static bool list_file_first = true;
   static bool scanmode_try = false;
+  static const unsigned long listmode_timeout = 20000; // 20sec.
+  static elapsedMillis listmode_msec = 0;
+  static const unsigned long infomode_timeout = 5000; // 5sec.
+  static elapsedMillis infomode_msec = 0;
   switch (__mode)
   {
   case SMP_INFOMSG:
-    if (__buttonStop.fallingEdge()) {
+    if (__buttonStop.fallingEdge() || infomode_msec > infomode_timeout) {
       __mode = __mode_return;
     }
     break;
@@ -74,12 +84,20 @@ void loop() {
     else __oled_userscreen();
     //on 'record'
     if (__buttonRecord.fallingEdge()) {
-      __oled_userscreen_recording_start();
-      if ((filetorec = __audio_start_recording()) == "") {
-        Serial.println("audio recording start error!");
+      if (__exhibitmode == SMP_EXHIBIT_GPS_PRESET_REC_DISABLED) {
+        __oled_userscreen_infomsg("Recording is disabled for\n this device.\nPlease try one that is at the center of the room.");
+        __mode = SMP_INFOMSG;
+        __mode_return = SMP_IDLE;
+        infomode_msec = 0;
+        break;
       } else {
-        Serial.println("audio recording start success!");
-        __mode = SMP_RECORDING;
+        __oled_userscreen_recording_start();
+        if ((filetorec = __audio_start_recording()) == "") {
+          Serial.println("audio recording start error!");
+        } else {
+          Serial.println("audio recording start success!");
+          __mode = SMP_RECORDING;
+        }
       }
     }
     //on 'play'
@@ -89,6 +107,7 @@ void loop() {
       } else {
         Serial.println("audio playing start success!");
         __mode = SMP_PLAYING;
+        __mode_return = SMP_IDLE;
       }
     }
     // dev. mode entry/exit (buttonStop + 3x buttonWhlClk)
@@ -114,8 +133,9 @@ void loop() {
       //if there is no file, then disable SMP_LISTING mode.
       if (__fs_nfiles == 0) {
         __oled_userscreen_infomsg("No files! \nPlease make at least 1 file by recording.");
-        __mode_return = SMP_IDLE;
         __mode = SMP_INFOMSG;
+        __mode_return = SMP_IDLE;
+        infomode_msec = 0;
         break;
       }
       //remind where we were beforehand?
@@ -131,6 +151,7 @@ void loop() {
       }
       __mode = SMP_LISTING;
       scanmode_try = false;
+      listmode_msec = 0;
     }
     break;
   case SMP_RECORDING:
@@ -151,13 +172,14 @@ void loop() {
       } else {
         Serial.println("audio playing start success!");
         __mode = SMP_PLAYING;
+        __mode_return = SMP_IDLE;
       }
     }
     break;
   case SMP_PLAYING:
     //screen
     if (__devmode == SMP_DEV_ON) __oled_devscreen();
-    else __oled_userscreen(); //TODO: better show sth. different!
+    else __oled_userscreen_play(filetoplay);
     //on 'stop'
     if (__buttonStop.fallingEdge()) {
       __audio_stop_playing();
@@ -177,10 +199,18 @@ void loop() {
     //on 'file-end'
     if (__audio_is_playing() == false) {
       //play done.
-      __mode = SMP_IDLE;
+      __mode = __mode_return;
+      listmode_msec = 0;
     }
     break;
   case SMP_LISTING:
+    //list mode timeout
+    if (__io_enc_event != ENC_NOEVENT || __buttonPlay.fallingEdge() || __audio_is_playing()) {
+      listmode_msec = 0;
+    }
+    if (listmode_msec > listmode_timeout) {
+      __mode = SMP_IDLE;
+    }
     //SCANNING & LISTING modes assumes that there's at least 1 file in the sd card.
     //NOTE,TODO: we need to check if __fs_nfiles >= 1, otherwise, we should block entering this mode.
     //  --> __fs_nfiles == 0, when u firstly started to use this. with empty sd card!
@@ -206,6 +236,7 @@ void loop() {
       } else {
         Serial.println("audio playing start success!");
         __mode = SMP_PLAYING;
+        __mode_return = SMP_LISTING;
       }
     }
     //on 'stop'
@@ -268,6 +299,7 @@ void loop() {
     if (__buttonStop.fallingEdge()) {
       __audio_stop_playing();
       __mode = SMP_LISTING;
+      listmode_msec = 0;
     }
     //first entry checker. --> clear here.
     if (scanmode_try == true) scanmode_try = false;
