@@ -1,7 +1,7 @@
 #include "global.h"
 
 //TO USE 'alternative' encoder uncomment following line.
-#define IO_ENC_UPDATE_ALTERNATIVE
+// #define IO_ENC_UPDATE_ALTERNATIVE
 
 //bounce
 #include <Bounce.h>
