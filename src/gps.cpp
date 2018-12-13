@@ -11,11 +11,16 @@ static Timezone myTZ(mySTD, mySTD);    //KST doesn't have DST. (hence, same TCR,
 static TimeChangeRule *tcr;    //pointer to the time change rule, use to get TZ abbrev
 time_t __local;
 
-//location
-float __latitude = 0.0;
-char __lat = 'X';
-float __longitude = 0.0;
-char __lon = 'Y';
+//location - for exhibition (Gwangju ACT)
+float __latitude = 35.1476611;
+char __lat = 'N';
+float __longitude = 126.9212695;
+char __lon = 'E';
+// //location
+// float __latitude = 0.0;
+// char __lat = 'X';
+// float __longitude = 0.0;
+// char __lon = 'Y';
 float __course = 0;
 float __speed = 0;
 String __cardinal = "";

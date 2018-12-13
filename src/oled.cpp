@@ -47,14 +47,14 @@ static void __oled_fixmarker() {
   }
 
   if (msec < timeout) {
-    __display->drawCircle(122, 6, 4, WHITE);
-    __display->drawCircle(122, 6, 2, WHITE);
+    __display->drawCircle(120, 4, 4, WHITE);
+    __display->drawCircle(120, 4, 2, WHITE);
 
     //smallest font
     __display->setFont();
     __display->setTextSize(1);
     __display->setTextColor(WHITE);
-    __display->setCursor(110 + (3 - __cardinal.length()) * 6, 17);
+    __display->setCursor(108 + (3 - __cardinal.length()) * 6, 12);
 
     //
     if (__speed > 3) { // display cardinal when speed > 3 kmph
@@ -87,14 +87,14 @@ static void __oled_date(int year, int month, int day) {
   __display->print(year);
 
   //'-'
-  __display->print("-");
+  __display->print(" / ");
 
   //'month'
   if(month < 10) __display->print('0');
   __display->print(month);
 
   //'-'
-  __display->print("-");
+  __display->print(" / ");
 
   //'day'
   if(day < 10) __display->print('0');
@@ -109,14 +109,14 @@ static void __oled_time(int hour, int minute, int second) {
   __display->print(hour);
 
   //'.'
-  __display->print(".");
+  __display->print(" : ");
 
   //'minute'
   if(minute < 10) __display->print('0');
   __display->print(minute);
 
   //'.'
-  __display->print(".");
+  __display->print(" : ");
 
   //'second'
   if(second < 10) __display->print('0');
@@ -244,11 +244,11 @@ void __oled_userscreen() {
   __oled_fixmarker();
 
   //line #1 : date (small font)
-  __display->setFont(&LiberationSans_Regular5pt7b);
+  __display->setFont(&LiberationSans_Regular6pt7b);
   __display->setTextSize(1);
   __display->setTextColor(WHITE);
   // __display->setCursor(38,12);
-  __display->setCursor(0,12);
+  __display->setCursor(0,8);
 
   //
   __oled_date(year(__local), month(__local), day(__local));
@@ -259,15 +259,34 @@ void __oled_userscreen() {
   __display->setTextSize(1);
   __display->setTextColor(WHITE);
   // __display->setCursor(24,31);
-  __display->setCursor(0,31);
+  __display->setCursor(0,30);
 
   //
   // __display->print(" ");
   __oled_time(hour(__local), minute(__local), second(__local));
   __display->println();
 
-  //line #3 : operation mode (big font)
-  __oled_mode();
+  // //line #3 : operation mode (big font)
+  // __oled_mode();
+  __display->setFont(&LiberationSans_Regular5pt7b);
+  __display->setTextSize(1);
+  __display->setTextColor(WHITE);
+  __display->setCursor(0,58);
+  __display->print("SMP v1");
+
+  //line #3 : latitude
+  __display->setFont(&LiberationSans_Regular5pt7b);
+  __display->setTextSize(1);
+  __display->setTextColor(WHITE);
+  __display->setCursor(68,48);
+  __display->printf("%08.4f %c\n", __latitude, __lat);
+
+  //line #4 : longitude
+  __display->setFont(&LiberationSans_Regular5pt7b);
+  __display->setTextSize(1);
+  __display->setTextColor(WHITE);
+  __display->setCursor(68,58);
+  __display->printf("%08.4f %c\n",__longitude, __lon);
 
   //splash!
   __display->display();
