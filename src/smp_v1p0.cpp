@@ -183,17 +183,19 @@ void loop() {
     //on 'stop'
     if (__buttonStop.fallingEdge()) {
       __audio_stop_playing();
-      __mode = SMP_IDLE;
+      __mode = __mode_return;
     }
     //on 'record'
     if (__buttonRecord.fallingEdge()) {
-      __audio_stop_playing();
-      __oled_userscreen_recording_start();
-      if ((filetorec = __audio_start_recording()) == "") {
-        Serial.println("audio recording start error!");
-      } else {
-        Serial.println("audio recording start success!");
-        __mode = SMP_RECORDING;
+      if (__exhibitmode != SMP_EXHIBIT_GPS_PRESET_REC_DISABLED) {
+        __audio_stop_playing();
+        __oled_userscreen_recording_start();
+        if ((filetorec = __audio_start_recording()) == "") {
+          Serial.println("audio recording start error!");
+        } else {
+          Serial.println("audio recording start success!");
+          __mode = SMP_RECORDING;
+        }
       }
     }
     //on 'file-end'
