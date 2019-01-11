@@ -7,7 +7,7 @@
 // #define SMP_EXHIBIT_OFF 0x20
 // #define SMP_EXHIBIT_GPS_PRESET_REC_ENABLED 0x21
 // #define SMP_EXHIBIT_GPS_PRESET_REC_DISABLED 0x22
-int __exhibitmode = SMP_EXHIBIT_GPS_PRESET_REC_DISABLED;
+int __exhibitmode = SMP_EXHIBIT_OFF;
 
 //operating modes
 int __mode = SMP_IDLE;
