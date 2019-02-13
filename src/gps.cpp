@@ -113,10 +113,15 @@ void __gps_setup() {
   //  --> https://android.gadgethacks.com/how-to/set-your-android-atomic-time-for-perfectly-synced-clock-0170500/
 
   if (__exhibitmode != SMP_EXHIBIT_OFF) {
-    //default location - for exhibition (Gwangju ACT)
-    __latitude = 35.1476611;
+    // //default location - for exhibition (Gwangju ACT)
+    // __latitude = 35.1476611;
+    // __lat = 'N';
+    // __longitude = 126.9212695;
+    // __lon = 'E';
+    //default location - for exhibition (alltimespace @ Hong-dae)
+    __latitude = 37.5527649;
     __lat = 'N';
-    __longitude = 126.9212695;
+    __longitude = 126.9196319;
     __lon = 'E';
   }
 }
